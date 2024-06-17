@@ -1,7 +1,8 @@
 # Microsoft-TTS-in-DavVinci-Resolve
 ## Introduction
-![tts](https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/ed81284a-a4c5-4259-aa56-8dfaa3f32abd)
 This script uses [Azure's TTS](https://speech.microsoft.com/) feature to convert text to speech in DaVinci Resolve. It uses free (F0) voice resources. The free quota for neural network voices is limited to 500,000 characters per month, with a limit of 3,000 characters per file.
+![tts](https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/ed81284a-a4c5-4259-aa56-8dfaa3f32abd)
+
 ## Installation
 ### 1.Clone the repository
 ```
@@ -18,7 +19,8 @@ pip install azure-cognitiveservices-speech
   Win：C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Edit
 ```
 ## Usage
-<img width="446" alt="截屏2024-06-16 19 04 45" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/f6bbfc11-f92b-4afb-9abb-36ece62e1d48">
+<img width="446" alt="截屏2024-06-17 11 49 28" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/15e50bc4-e2be-43c4-a9c2-1eacc5439d08">
+<img width="446" alt="截屏2024-06-17 11 51 57" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/1ba0f804-8f5b-40aa-a455-41a912349342">
 
 ## Support
 Open source and AI artificial intelligence, dedicated to the practical application of AI artificial intelligence. All software is open source and free. If you support my work, feel free to become a sponsor.
