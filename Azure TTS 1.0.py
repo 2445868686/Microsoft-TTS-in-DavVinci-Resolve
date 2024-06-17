@@ -185,7 +185,6 @@ infomsg = """
     <p>从<a href="https://speech.microsoft.com/">Microsoft Speech Studio</a>获取您的API密钥。</p>
 </body>
 """
-
 ui = fusion.UIManager
 dispatcher = bmd.UIDispatcher(ui)
 win = dispatcher.AddWindow(
@@ -216,7 +215,7 @@ win = dispatcher.AddWindow(
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Button({"ID": 'GetSubButton', "Text": 'GetSubtitle'}),
+                                        ui.Button({"ID": 'GetSubButton', "Text": 'Get Subtitle From Timeline'}),
 
                                     ]
                                 ),
@@ -250,7 +249,7 @@ win = dispatcher.AddWindow(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'styledegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'styledegreeLabel', "Text": 'Style Degree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'StyleDegreeSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'StyleDegreeSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
@@ -359,8 +358,8 @@ win = dispatcher.AddWindow(
 
 itm = win.GetItems()
 
-"""# 汉化界面
-itm["GetSubButton"].Text = "从时间线获取字幕"
+# 汉化界面
+"""itm["GetSubButton"].Text = "从时间线获取字幕"
 itm["LanguageLabel"].Text = "语言"
 itm["NameTypeLabel"].Text = "类型"
 itm["NameLabel"].Text = "名称"
@@ -375,10 +374,9 @@ itm["RegionLabel"].Text = "区域"
 itm["ApiKeyLabel"].Text = "API 密钥"
 itm["PathLabel"].Text = "保存路径"
 itm["Browse"].Text = "浏览"
-itm["StatusLabel"].Text = ""
+itm["StatusLabel"].Text = """""
 itm["MyStack"].CurrentIndex = 0
-"""
-itm["MyTabs"].AddTab("Azure TTS")
+itm["MyTabs"].AddTab("TTS")
 itm["MyTabs"].AddTab("Configuration")
 
 def on_style_degree_slider_value_changed(ev):
@@ -742,7 +740,7 @@ def on_play_button_clicked(ev):
         return
     
     update_status("Playing ...")
-    #itm["PlayButton"].Text = "⏸"
+    itm["PlayButton"].Text = "⏸"
     global subtitle, ssml, stream 
     service_region = itm["Region"].Text
     speech_key = itm["ApiKey"].Text
@@ -764,7 +762,7 @@ def on_play_button_clicked(ev):
     stream = speechsdk.AudioDataStream(result)
 
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        #itm["PlayButton"].Text = "Play"
+        itm["PlayButton"].Text = "Play"
         update_status("")
     elif result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = result.cancellation_details
