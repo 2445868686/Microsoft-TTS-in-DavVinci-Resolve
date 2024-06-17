@@ -1,6 +1,7 @@
 # Microsoft-TTS-in-DavVinci-Resolve
 ## Introduction
-This script uses Azure's TTS feature to convert text to speech in DaVinci Resolve. 
+![tts](https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/ed81284a-a4c5-4259-aa56-8dfaa3f32abd)
+This script uses [Azure's TTS](https://speech.microsoft.com/) feature to convert text to speech in DaVinci Resolve. It uses free (F0) voice resources. The free quota for neural network voices is limited to 500,000 characters per month, with a limit of 3,000 characters per file.
 ## Installation
 ### 1.Clone the repository
 ```
@@ -25,3 +26,6 @@ Open source and AI artificial intelligence, dedicated to the practical applicati
 PayPal：https://www.paypal.me/heiba2wk
 
 <img width="430" alt="A031269C-141F-4338-95F1-6018D40E0A3F" src="https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/a17d3ade-7486-4b3f-9b19-1d2d0c4b6945">
+
+##
+![二维码_语雀](https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/b311690f-b9c4-4800-9416-8a55a77acc63)
