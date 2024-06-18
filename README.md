@@ -19,8 +19,8 @@ pip install azure-cognitiveservices-speech
   Win：C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Edit
 ```
 ## Usage
-<img width="446" alt="截屏2024-06-17 11 49 28" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/15e50bc4-e2be-43c4-a9c2-1eacc5439d08">
-<img width="446" alt="截屏2024-06-17 11 51 57" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/1ba0f804-8f5b-40aa-a455-41a912349342">
+<img width="500" alt="截屏2024-06-17 11 49 28" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/15e50bc4-e2be-43c4-a9c2-1eacc5439d08">
+<img width="500" alt="截屏2024-06-17 11 51 57" src="https://github.com/2445868686/Microsoft-TTS-in-DavVinci-Resolve/assets/50979290/1ba0f804-8f5b-40aa-a455-41a912349342">
 
 ## Support
 Open source and AI artificial intelligence, dedicated to the practical application of AI artificial intelligence. All software is open source and free. If you support my work, feel free to become a sponsor.
