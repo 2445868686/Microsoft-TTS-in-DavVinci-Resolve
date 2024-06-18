@@ -185,13 +185,14 @@ infomsg = """
     <p>从<a href="https://speech.microsoft.com/">Microsoft Speech Studio</a>获取您的API密钥。</p>
 </body>
 """
+
 ui = fusion.UIManager
 dispatcher = bmd.UIDispatcher(ui)
 win = dispatcher.AddWindow(
     {
         "ID": 'MyWin',
         "WindowTitle": 'TTS 1.0',
-        "Geometry": [700, 300, 400, 480],
+        "Geometry": [700, 300, 500, 480],
         "Spacing": 10,
     },
  [
@@ -215,7 +216,7 @@ win = dispatcher.AddWindow(
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Button({"ID": 'GetSubButton', "Text": 'Get Subtitle From Timeline'}),
+                                        ui.Button({"ID": 'GetSubButton', "Text": 'GetSubtitle'}),
 
                                     ]
                                 ),
@@ -249,7 +250,7 @@ win = dispatcher.AddWindow(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'styledegreeLabel', "Text": 'Style Degree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'styledegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'StyleDegreeSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'StyleDegreeSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
@@ -358,8 +359,8 @@ win = dispatcher.AddWindow(
 
 itm = win.GetItems()
 
-# 汉化界面
-"""itm["GetSubButton"].Text = "从时间线获取字幕"
+"""# 汉化界面
+itm["GetSubButton"].Text = "从时间线获取字幕"
 itm["LanguageLabel"].Text = "语言"
 itm["NameTypeLabel"].Text = "类型"
 itm["NameLabel"].Text = "名称"
@@ -374,9 +375,10 @@ itm["RegionLabel"].Text = "区域"
 itm["ApiKeyLabel"].Text = "API 密钥"
 itm["PathLabel"].Text = "保存路径"
 itm["Browse"].Text = "浏览"
-itm["StatusLabel"].Text = """""
+itm["StatusLabel"].Text = ""
 itm["MyStack"].CurrentIndex = 0
-itm["MyTabs"].AddTab("TTS")
+"""
+itm["MyTabs"].AddTab("Azure TTS")
 itm["MyTabs"].AddTab("Configuration")
 
 def on_style_degree_slider_value_changed(ev):
@@ -420,6 +422,7 @@ for fmt in audio_formats.keys():
 # 初始化 subtitle 变量
 subtitle = ""
 lang = ""
+current_context=""
 ssml = ''
 voice_name = ""
 style = None
@@ -432,115 +435,319 @@ def on_subtitle_text_changed(ev):
     stream = None
 win.On.SubtitleTxt.TextChanged = on_subtitle_text_changed
 
-Language = ['Chinese','English', 'German']
-for language in Language:
-    itm["LanguageCombo"].AddItem(language)
-
-NameType = ['Female','Male', 'Child','Neutral']
-for nametype  in NameType:
-    itm["NameTypeCombo"].AddItem(nametype)
-
-
 voices = {
-    'zh-CN': [
-        "zh-CN-XiaoxiaoNeural (Female)",
-        "zh-CN-YunxiNeural (Male)",
-        "zh-CN-YunjianNeural (Male)",
-        "zh-CN-XiaoyiNeural (Female)",
-        "zh-CN-YunyangNeural (Male)",
-        "zh-CN-XiaochenNeural (Female)",
-        "zh-CN-XiaohanNeural (Female)",
-        "zh-CN-XiaomengNeural (Female)",
-        "zh-CN-XiaomoNeural (Female)",
-        "zh-CN-XiaoqiuNeural (Female)",
-        "zh-CN-XiaoruiNeural (Female)",
-        "zh-CN-XiaoshuangNeural (Female, Child)",
-        "zh-CN-XiaoyanNeural (Female)",
-        "zh-CN-XiaoyouNeural (Female, Child)",
-        "zh-CN-XiaozhenNeural (Female)",
-        "zh-CN-YunfengNeural (Male)",
-        "zh-CN-YunhaoNeural (Male)",
-        "zh-CN-YunxiaNeural (Male)",
-        "zh-CN-YunyeNeural (Male)",
-        "zh-CN-YunzeNeural (Male)",
-        "zh-CN-XiaochenMultilingualNeural (Female)",
-        "zh-CN-XiaorouNeural (Female)",
-        "zh-CN-XiaoxiaoDialectsNeural (Female)",
-        "zh-CN-XiaoxiaoMultilingualNeural (Female)",
-        "zh-CN-XiaoyuMultilingual (Female)",
-        "zh-CN-YunjieNeural (Male)",
-        "zh-CN-YunyiMultilingualNeural (Male)"
-    ],
-    'en-US': [
-        "en-US-AvaNeural (Female)",
-        "en-US-AndrewNeural (Male)",
-        "en-US-EmmaNeural (Female)",
-        "en-US-BrianNeural (Male)",
-        "en-US-JennyNeural (Female)",
-        "en-US-GuyNeural (Male)",
-        "en-US-AriaNeural (Female)",
-        "en-US-DavisNeural (Male)",
-        "en-US-JaneNeural (Female)",
-        "en-US-JasonNeural (Male)",
-        "en-US-SaraNeural (Female)",
-        "en-US-TonyNeural (Male)",
-        "en-US-NancyNeural (Female)",
-        "en-US-AmberNeural (Female)",
-        "en-US-AnaNeural (Female, Child)",
-        "en-US-AshleyNeural (Female)",
-        "en-US-BrandonNeural (Male)",
-        "en-US-ChristopherNeural (Male)",
-        "en-US-CoraNeural (Female)",
-        "en-US-ElizabethNeural (Female)",
-        "en-US-EricNeural (Male)",
-        "en-US-JacobNeural (Male)",
-        "en-US-JennyMultilingualNeural (Female)",
-        "en-US-MichelleNeural (Female)",
-        "en-US-MonicaNeural (Female)",
-        "en-US-RogerNeural (Male)",
-        "en-US-RyanMultilingualNeural (Male)",
-        "en-US-SteffanNeural (Male)",
-        "en-US-AIGenerate1Neural1 (Male)",
-        "en-US-AIGenerate2Neural1 (Female)",
-        "en-US-AndrewMultilingualNeural (Male)",
-        "en-US-AvaMultilingualNeural (Female)",
-        "en-US-BlueNeural (Neutral)",
-        "en-US-KaiNeural (Male)",
-        "en-US-LunaNeural (Female)",
-        "en-US-BrianMultilingualNeural (Male)",
-        "en-US-EmmaMultilingualNeural (Female)",
-        "en-US-AlloyMultilingualNeural (Male)",
-        "en-US-EchoMultilingualNeural (Male)",
-        "en-US-FableMultilingualNeural (Neutral)",
-        "en-US-OnyxMultilingualNeural (Male)",
-        "en-US-NovaMultilingualNeural (Female)",
-        "en-US-ShimmerMultilingualNeural (Female)",
-        "en-US-AlloyMultilingualNeuralHD (Male)",
-        "en-US-EchoMultilingualNeuralHD (Male)",
-        "en-US-FableMultilingualNeuralHD (Neutral)",
-        "en-US-OnyxMultilingualNeuralHD (Male)",
-        "en-US-NovaMultilingualNeuralHD (Female)",
-        "en-US-ShimmerMultilingualNeuralHD (Female)"
-    ],
-    'de-DE': [
-        "de-DE-KatjaNeural (Female)",
-        "de-DE-ConradNeural (Male)",
-        "de-DE-AmalaNeural (Female)",
-        "de-DE-BerndNeural (Male)",
-        "de-DE-ChristophNeural (Male)",
-        "de-DE-ElkeNeural (Female)",
-        "de-DE-GiselaNeural (Female, Child)",
-        "de-DE-KasperNeural (Male)",
-        "de-DE-KillianNeural (Male)",
-        "de-DE-KlarissaNeural (Female)",
-        "de-DE-KlausNeural (Male)",
-        "de-DE-LouisaNeural (Female)",
-        "de-DE-MajaNeural (Female)",
-        "de-DE-RalfNeural (Male)",
-        "de-DE-TanjaNeural (Female)",
-        "de-DE-FlorianMultilingualNeural (Male)",
-        "de-DE-SeraphinaMultilingualNeural (Female)"
-    ]
+    'zh-CN': {
+        'language': 'Chinese (Simplified)',
+        'voices': [
+            "zh-CN-XiaoxiaoNeural (Female)",
+            "zh-CN-YunxiNeural (Male)",
+            "zh-CN-YunjianNeural (Male)",
+            "zh-CN-XiaoyiNeural (Female)",
+            "zh-CN-YunyangNeural (Male)",
+            "zh-CN-XiaochenNeural (Female)",
+            "zh-CN-XiaohanNeural (Female)",
+            "zh-CN-XiaomengNeural (Female)",
+            "zh-CN-XiaomoNeural (Female)",
+            "zh-CN-XiaoqiuNeural (Female)",
+            "zh-CN-XiaoruiNeural (Female)",
+            "zh-CN-XiaoshuangNeural (Female, Child)",
+            "zh-CN-XiaoyanNeural (Female)",
+            "zh-CN-XiaoyouNeural (Female, Child)",
+            "zh-CN-XiaozhenNeural (Female)",
+            "zh-CN-YunfengNeural (Male)",
+            "zh-CN-YunhaoNeural (Male)",
+            "zh-CN-YunxiaNeural (Male)",
+            "zh-CN-YunyeNeural (Male)",
+            "zh-CN-YunzeNeural (Male)",
+            "zh-CN-XiaochenMultilingualNeural (Female)",
+            "zh-CN-XiaorouNeural (Female)",
+            "zh-CN-XiaoxiaoDialectsNeural (Female)",
+            "zh-CN-XiaoxiaoMultilingualNeural (Female)",
+            "zh-CN-XiaoyuMultilingual (Female)",
+            "zh-CN-YunjieNeural (Male)",
+            "zh-CN-YunyiMultilingualNeural (Male)"
+        ]
+    },
+    'yue-CN': {
+        'language': 'Chinese (Cantonese, Simplified)',
+        'voices': [
+            "yue-CN-XiaoMinNeural (Female)",
+            "yue-CN-YunSongNeural (Male)"
+        ]
+    },
+    'zh-CN-GUANGXI': {
+        'language': 'Chinese (Guangxi Accent Mandarin, Simplified)',
+        'voices': [
+            "zh-CN-guangxi-YunqiNeural (Male)"
+        ]
+    },
+    'zh-CN-henan': {
+        'language': 'Chinese (Zhongyuan Mandarin Henan, Simplified)',
+        'voices': [
+            "zh-CN-henan-YundengNeural (Male)"
+        ]
+    },
+    'zh-CN-liaoning': {
+        'language': 'Chinese (Northeastern Mandarin, Simplified)',
+        'voices': [
+            "zh-CN-liaoning-XiaobeiNeural (Female)",
+            "zh-CN-liaoning-YunbiaoNeural (Male)"
+        ]
+    },
+    'zh-CN-shaanxi': {
+        'language': 'Chinese (Zhongyuan Mandarin Shaanxi, Simplified)',
+        'voices': [
+            "zh-CN-shaanxi-XiaoniNeural (Female)"
+        ]
+    },
+    'zh-CN-shandong': {
+        'language': 'Chinese (Jilu Mandarin, Simplified)',
+        'voices': [
+            "zh-CN-shandong-YunxiangNeural (Male)"
+        ]
+    },
+    'zh-CN-sichuan': {
+        'language': 'Chinese (Southwestern Mandarin, Simplified)',
+        'voices': [
+            "zh-CN-sichuan-YunxiNeural (Male)"
+        ]
+    },
+    'zh-HK': {
+        'language': 'Chinese (Cantonese, Traditional)',
+        'voices': [
+            "zh-HK-HiuMaanNeural (Female)",
+            "zh-HK-WanLungNeural (Male)",
+            "zh-HK-HiuGaaiNeural (Female)"
+        ]
+    },
+    'zh-TW': {
+        'language': 'Chinese (Taiwanese Mandarin, Traditional)',
+        'voices': [
+            "zh-TW-HsiaoChenNeural (Female)",
+            "zh-TW-YunJheNeural (Male)",
+            "zh-TW-HsiaoYuNeural (Female)"
+        ]
+    },
+    'en-AU': {
+        'language': 'English (Australia)',
+        'voices': [
+            "en-AU-NatashaNeural (Female)",
+            "en-AU-WilliamNeural (Male)",
+            "en-AU-AnnetteNeural (Female)",
+            "en-AU-CarlyNeural (Female)",
+            "en-AU-DarrenNeural (Male)",
+            "en-AU-DuncanNeural (Male)",
+            "en-AU-ElsieNeural (Female)",
+            "en-AU-FreyaNeural (Female)",
+            "en-AU-JoanneNeural (Female)",
+            "en-AU-KenNeural (Male)",
+            "en-AU-KimNeural (Female)",
+            "en-AU-NeilNeural (Male)",
+            "en-AU-TimNeural (Male)",
+            "en-AU-TinaNeural (Female)"
+        ]
+    },
+    'en-CA': {
+        'language': 'English (Canada)',
+        'voices': [
+            "en-CA-ClaraNeural (Female)",
+            "en-CA-LiamNeural (Male)"
+        ]
+    },
+    'en-GB': {
+        'language': 'English (United Kingdom)',
+        'voices': [
+            "en-GB-SoniaNeural (Female)",
+            "en-GB-RyanNeural (Male)",
+            "en-GB-LibbyNeural (Female)",
+            "en-GB-AbbiNeural (Female)",
+            "en-GB-AdaMultilingualNeural (Female)",
+            "en-GB-AlfieNeural (Male)",
+            "en-GB-BellaNeural (Female)",
+            "en-GB-ElliotNeural (Male)",
+            "en-GB-EthanNeural (Male)",
+            "en-GB-HollieNeural (Female)",
+            "en-GB-MaisieNeural (Female, Child)",
+            "en-GB-NoahNeural (Male)",
+            "en-GB-OliverNeural (Male)",
+            "en-GB-OliviaNeural (Female)",
+            "en-GB-ThomasNeural (Male)",
+            "en-GB-OllieMultilingualNeural (Male)"
+        ]
+    },
+    'en-HK': {
+        'language': 'English (Hong Kong SAR)',
+        'voices': [
+            "en-HK-YanNeural (Female)",
+            "en-HK-SamNeural (Male)"
+        ]
+    },
+    'en-IE': {
+        'language': 'English (Ireland)',
+        'voices': [
+            "en-IE-EmilyNeural (Female)",
+            "en-IE-ConnorNeural (Male)"
+        ]
+    },
+    'en-IN': {
+        'language': 'English (India)',
+        'voices': [
+            "en-IN-NeerjaNeural (Female)",
+            "en-IN-PrabhatNeural (Male)"
+        ]
+    },
+    'en-KE': {
+        'language': 'English (Kenya)',
+        'voices': [
+            "en-KE-AsiliaNeural (Female)",
+            "en-KE-ChilembaNeural (Male)"
+        ]
+    },
+    'en-NG': {
+        'language': 'English (Nigeria)',
+        'voices': [
+            "en-NG-EzinneNeural (Female)",
+            "en-NG-AbeoNeural (Male)"
+        ]
+    },
+    'en-NZ': {
+        'language': 'English (New Zealand)',
+        'voices': [
+            "en-NZ-MollyNeural (Female)",
+            "en-NZ-MitchellNeural (Male)"
+        ]
+    },
+    'en-PH': {
+        'language': 'English (Philippines)',
+        'voices': [
+            "en-PH-RosaNeural (Female)",
+            "en-PH-JamesNeural (Male)"
+        ]
+    },
+    'en-SG': {
+        'language': 'English (Singapore)',
+        'voices': [
+            "en-SG-LunaNeural (Female)",
+            "en-SG-WayneNeural (Male)"
+        ]
+    },
+    'en-TZ': {
+        'language': 'English (Tanzania)',
+        'voices': [
+            "en-TZ-ImaniNeural (Female)",
+            "en-TZ-ElimuNeural (Male)"
+        ]
+    },
+    'en-US': {
+        'language': 'English (United States)',
+        'voices': [
+            "en-US-AvaNeural (Female)",
+            "en-US-AndrewNeural (Male)",
+            "en-US-EmmaNeural (Female)",
+            "en-US-BrianNeural (Male)",
+            "en-US-JennyNeural (Female)",
+            "en-US-GuyNeural (Male)",
+            "en-US-AriaNeural (Female)",
+            "en-US-DavisNeural (Male)",
+            "en-US-JaneNeural (Female)",
+            "en-US-JasonNeural (Male)",
+            "en-US-SaraNeural (Female)",
+            "en-US-TonyNeural (Male)",
+            "en-US-NancyNeural (Female)",
+            "en-US-AmberNeural (Female)",
+            "en-US-AnaNeural (Female, Child)",
+            "en-US-AshleyNeural (Female)",
+            "en-US-BrandonNeural (Male)",
+            "en-US-ChristopherNeural (Male)",
+            "en-US-CoraNeural (Female)",
+            "en-US-ElizabethNeural (Female)",
+            "en-US-EricNeural (Male)",
+            "en-US-JacobNeural (Male)",
+            "en-US-JennyMultilingualNeural (Female)",
+            "en-US-MichelleNeural (Female)",
+            "en-US-MonicaNeural (Female)",
+            "en-US-RogerNeural (Male)",
+            "en-US-RyanMultilingualNeural (Male)",
+            "en-US-SteffanNeural (Male)",
+            "en-US-AIGenerate1Neural1 (Male)",
+            "en-US-AIGenerate2Neural1 (Female)",
+            "en-US-AndrewMultilingualNeural (Male)",
+            "en-US-AvaMultilingualNeural (Female)",
+            "en-US-BlueNeural (Neutral)",
+            "en-US-KaiNeural (Male)",
+            "en-US-LunaNeural (Female)",
+            "en-US-BrianMultilingualNeural (Male)",
+            "en-US-EmmaMultilingualNeural (Female)",
+            "en-US-AlloyMultilingualNeural (Male)",
+            "en-US-EchoMultilingualNeural (Male)",
+            "en-US-FableMultilingualNeural (Neutral)",
+            "en-US-OnyxMultilingualNeural (Male)",
+            "en-US-NovaMultilingualNeural (Female)",
+            "en-US-ShimmerMultilingualNeural (Female)",
+            "en-US-AlloyMultilingualNeuralHD (Male)",
+            "en-US-EchoMultilingualNeuralHD (Male)",
+            "en-US-FableMultilingualNeuralHD (Neutral)",
+            "en-US-OnyxMultilingualNeuralHD (Male)",
+            "en-US-NovaMultilingualNeuralHD (Female)",
+            "en-US-ShimmerMultilingualNeuralHD (Female)"
+        ]
+    },
+    'de-DE': {
+        'language': 'German (Germany)',
+        'voices': [
+            "de-DE-KatjaNeural (Female)",
+            "de-DE-ConradNeural (Male)",
+            "de-DE-AmalaNeural (Female)",
+            "de-DE-BerndNeural (Male)",
+            "de-DE-ChristophNeural (Male)",
+            "de-DE-ElkeNeural (Female)",
+            "de-DE-GiselaNeural (Female, Child)",
+            "de-DE-KasperNeural (Male)",
+            "de-DE-KillianNeural (Male)",
+            "de-DE-KlarissaNeural (Female)",
+            "de-DE-KlausNeural (Male)",
+            "de-DE-LouisaNeural (Female)",
+            "de-DE-MajaNeural (Female)",
+            "de-DE-RalfNeural (Male)",
+            "de-DE-TanjaNeural (Female)",
+            "de-DE-FlorianMultilingualNeural (Male)",
+            "de-DE-SeraphinaMultilingualNeural (Female)"
+        ]
+    },
+    'ja-JP': {
+        'language': 'Japanese (Japan)',
+        'voices': [
+            "ja-JP-NanamiNeural (Female)",
+            "ja-JP-KeitaNeural (Male)",
+            "ja-JP-AoiNeural (Female)",
+            "ja-JP-DaichiNeural (Male)",
+            "ja-JP-MayuNeural (Female)",
+            "ja-JP-NaokiNeural (Male)",
+            "ja-JP-ShioriNeural (Female)",
+            "ja-JP-MasaruMultilingualNeural1,3 (Male)"
+        ]
+    },
+    'ko-KR': {
+        'language': 'Korean (Korea)',
+        'voices': [
+            "ko-KR-SunHiNeural (Female)",
+            "ko-KR-InJoonNeural (Male)",
+            "ko-KR-BongJinNeural (Male)",
+            "ko-KR-GookMinNeural (Male)",
+            "ko-KR-JiMinNeural (Female)",
+            "ko-KR-SeoHyeonNeural (Female)",
+            "ko-KR-SoonBokNeural (Female)",
+            "ko-KR-YuJinNeural (Female)",
+            "ko-KR-HyunsuNeural1 (Male)"
+        ]
+    },
+    'zu-ZA': {
+        'language': 'Zulu (South Africa)',
+        'voices': [
+            "zu-ZA-ThandoNeural (Female)",
+            "zu-ZA-ThembaNeural (Male)"
+        ]
+    },
 }
 
 styles = {
@@ -572,22 +779,29 @@ styles = {
     "zh-CN-YunzeNeural": ["angry", "calm", "cheerful", "depressed", "disgruntled", "documentary-narration", "fearful", "sad", "serious"]
 }
 
+Language = [voices[locale]['language'] for locale in voices.keys()]
+for language in Language:
+    itm["LanguageCombo"].AddItem(language)
+
+NameType = ['Female','Male', 'Child','Neutral']
+for nametype  in NameType:
+    itm["NameTypeCombo"].AddItem(nametype)
+
 def on_language_combo_current_index_changed(ev):
     global lang
     itm["NameCombo"].Clear()
     lang_index = itm["LanguageCombo"].CurrentIndex
 
-    if lang_index == 0:
-        lang = 'zh-CN'
-    elif lang_index == 1:
-        lang = 'en-US'
-    elif lang_index == 2:
-        lang = 'de-DE'
+    selected_language = Language[lang_index]
+    lang = next(locale for locale, data in voices.items() if data['language'] == selected_language)
 
-    for voice in voices.get(lang, []):
-        voice_name, voice_type = voice.split(' (')
-        voice_type = voice_type.rstrip(')')
+    selected_type = itm["NameTypeCombo"].CurrentText
+
+    matching_voices = [voice.split(' (')[0] for voice in voices[lang]['voices'] if voice.endswith(f"{selected_type})")]
+
+    for voice_name in matching_voices:
         itm["NameCombo"].AddItem(voice_name)
+
 
 def on_name_combo_current_index_changed(ev):
     global voice_name
@@ -601,14 +815,13 @@ def on_name_combo_current_index_changed(ev):
 
 def on_name_type_combo_current_index_changed(ev):
     itm["NameCombo"].Clear()
-    type_index = itm["NameTypeCombo"].CurrentIndex
     selected_type = itm["NameTypeCombo"].CurrentText
 
-    for voice in voices.get(lang, []):
-        voice_name, voice_type = voice.split(' (')
-        voice_type = voice_type.rstrip(')')
-        if voice_type == selected_type:
-            itm["NameCombo"].AddItem(voice_name)
+    matching_voices = [voice.split(' (')[0] for voice in voices[lang]['voices'] if voice.endswith(f"{selected_type})")]
+
+    for voice_name in matching_voices:
+        itm["NameCombo"].AddItem(voice_name)
+
 
 win.On.NameCombo.CurrentIndexChanged = on_name_combo_current_index_changed
 win.On.LanguageCombo.CurrentIndexChanged = on_language_combo_current_index_changed
@@ -741,6 +954,7 @@ def on_play_button_clicked(ev):
     
     update_status("Playing ...")
     itm["PlayButton"].Text = "⏸"
+    itm["PlayButton"].Enabled = False
     global subtitle, ssml, stream 
     service_region = itm["Region"].Text
     speech_key = itm["ApiKey"].Text
@@ -770,22 +984,27 @@ def on_play_button_clicked(ev):
         print("Speech synthesis canceled: {}".format(cancellation_details.reason))
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
             print("Error details: {}".format(cancellation_details.error_details))
+            
+    itm["PlayButton"].Enabled = True  
 
 win.On.PlayButton.Clicked = on_play_button_clicked
 
 def on_load_button_clicked(ev):
     count = 0
+    global current_context,subtitle,stream
     while True:
         count += 1
         filename = itm["Path"].Text + f"/Untitled#{count}" + itm["OutputFormatCombo"].CurrentText.split(", ")[1]
         if not os.path.exists(filename):
             break
-
-    if stream:
+    current_context = itm["SubtitleTxt"].PlainText
+    print(f"stream:{stream}")
+    if stream and current_context==subtitle:
         stream.save_to_wav_file(filename)
         add_to_media_pool(filename)
         update_status("Load successful")
-    else:
+        stream =None
+    elif not stream and current_context!=subtitle:
         update_status("Generate ...")
         service_region = itm["Region"].Text
         speech_key = itm["ApiKey"].Text
@@ -814,6 +1033,9 @@ def on_load_button_clicked(ev):
             print("Speech synthesis canceled: {}".format(cancellation_details.reason))
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
                 print("Error details: {}".format(cancellation_details.error_details))
+    else:
+        update_status(f"Media pool already exists")
+        #current_context = itm["SubtitleTxt"].PlainText
 
 win.On.LoadButton.Clicked = on_load_button_clicked
 
