@@ -82,6 +82,7 @@ default_settings = {
     "TYPE": 0,
     "NAME": 0,
     "RATE": 1.0,
+    "PITCH": 1.0,
     "STYLE": 0,
     "STYLEDEGREE": 1.0,
     "OUTPUT_FORMATS":0
@@ -103,7 +104,6 @@ def add_to_media_pool(filename):
     root_folder = media_pool.GetRootFolder()
     tts_folder = None
 
-    # 检查 TTS 文件夹是否已存在
     folders = root_folder.GetSubFolderList()
     for folder in folders:
         if folder.GetName() == "TTS":
@@ -169,12 +169,12 @@ infomsg = """
     <h3>区域、API密钥</h3>
     <p>从<a href="https://speech.microsoft.com/">Microsoft Speech Studio</a>获取您的API密钥。</p>
 </body>
-
 </html>
 
 """
 
 """
+
 <body>
     <h3>Introduction</h3>
     <p>This script uses Azure's TTS feature to convert text to speech.</p>
@@ -193,7 +193,7 @@ win = dispatcher.AddWindow(
     {
         "ID": 'MyWin',
         "WindowTitle": 'TTS 1.0',
-        "Geometry": [700, 300, 500, 480],
+        "Geometry": [700, 300, 400, 480],
         "Spacing": 10,
     },
  [
@@ -236,6 +236,8 @@ win = dispatcher.AddWindow(
                                     [
                                         ui.Label({"ID": 'NameLabel', "Text": 'Name', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'NameCombo', "Text": '', "Weight": 0.8}),
+                                        ui.Label({"ID": 'MutilLabel', "Text": 'Multilingual', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.ComboBox({"ID": 'MutilCombo', "Text": '', "Weight": 0.2}),      
                                   
                                     ]
                                 ),
@@ -251,7 +253,7 @@ win = dispatcher.AddWindow(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'styledegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'StyleDegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'StyleDegreeSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'StyleDegreeSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
@@ -260,9 +262,18 @@ win = dispatcher.AddWindow(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'rateLabel', "Text": 'Rate', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'RateLabel', "Text": 'Rate', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'RateSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'RateSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
+                                    ]
+                                ),
+                                ui.HGroup(
+                                    {"Weight": 0.1},
+                                    [
+                                        
+                                        ui.Label({"ID": 'PitchLabel', "Text": 'Pitch', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Slider({"ID": 'PitchSlider', "Value": 100, "Minimum": 50, "Maximum": 150,  "Orientation": "Horizontal", "Weight": 0.5}),
+                                        ui.DoubleSpinBox({"ID": 'PitchSpinBox', "Value": 1.0, "Minimum": 0.5, "Maximum": 1.5, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
                                 ),
                                 ui.HGroup(
@@ -363,11 +374,13 @@ itm = win.GetItems()
 # 汉化界面
 itm["GetSubButton"].Text = "从时间线获取字幕"
 itm["LanguageLabel"].Text = "语言"
+itm["MutilLabel"].Text = "多语言"
 itm["NameTypeLabel"].Text = "类型"
 itm["NameLabel"].Text = "名称"
 itm["StyleLabel"].Text = "风格"
-itm["styledegreeLabel"].Text = "风格强度"
-itm["rateLabel"].Text = "速度"
+itm["StyleDegreeLabel"].Text = "风格强度"
+itm["RateLabel"].Text = "速度"
+itm["PitchLabel"].Text = "音高"
 itm["OutputFormatLabel"].Text = "输出格式"
 itm["PlayButton"].Text = "播放预览"
 itm["LoadButton"].Text = "合成并加载"
@@ -377,6 +390,7 @@ itm["ApiKeyLabel"].Text = "API 密钥"
 itm["PathLabel"].Text = "保存路径"
 itm["Browse"].Text = "浏览"
 itm["StatusLabel"].Text = ""
+
 itm["MyStack"].CurrentIndex = 0
 itm["MyTabs"].AddTab("文本转语音")
 itm["MyTabs"].AddTab("配置")
@@ -402,6 +416,15 @@ def on_rate_spinbox_value_changed(ev):
     itm["RateSlider"].Value = value
 win.On.RateSpinBox.ValueChanged = on_rate_spinbox_value_changed
 
+def on_pitch_slider_value_changed(ev):
+    value = ev['Value'] / 100.0  
+    itm["PitchSpinBox"].Value = value
+win.On.PitchSlider.ValueChanged = on_pitch_slider_value_changed
+
+def on_pitch_spinbox_value_changed(ev):
+    value = int(ev['Value'] * 100)  
+    itm["PitchSlider"].Value = value
+win.On.PitchSpinBox.ValueChanged = on_pitch_spinbox_value_changed
 
 def on_my_tabs_current_changed(ev):
     itm["MyStack"].CurrentIndex = ev["Index"]
@@ -422,6 +445,7 @@ for fmt in audio_formats.keys():
 # 初始化 subtitle 变量
 subtitle = ""
 lang = ""
+multilingual='default'
 current_context=""
 ssml = ''
 voice_name = ""
@@ -437,7 +461,8 @@ win.On.SubtitleTxt.TextChanged = on_subtitle_text_changed
 
 voices = {
     'zh-CN': {
-        'language': 'Chinese (Simplified)',
+        #'language': 'Chinese (Simplified)',
+        'language': 'Chinese (普通话)',
         'voices': [
             "zh-CN-XiaoxiaoNeural (Female)",
             "zh-CN-YunxiNeural (Male)",
@@ -469,51 +494,67 @@ voices = {
         ]
     },
     'yue-CN': {
-        'language': 'Chinese (Cantonese, Simplified)',
+        #'language': 'Chinese (Cantonese, Simplified)',
+        'language': 'Chinese (粤语，简体)',
         'voices': [
             "yue-CN-XiaoMinNeural (Female)",
             "yue-CN-YunSongNeural (Male)"
         ]
     },
     'zh-CN-GUANGXI': {
-        'language': 'Chinese (Guangxi Accent Mandarin, Simplified)',
+        #'language': 'Chinese (Guangxi Accent Mandarin, Simplified)',
+        'language': 'Chinese (广西口音普通话，简体)',
         'voices': [
             "zh-CN-guangxi-YunqiNeural (Male)"
         ]
     },
     'zh-CN-henan': {
-        'language': 'Chinese (Zhongyuan Mandarin Henan, Simplified)',
+        #'language': 'Chinese (Zhongyuan Mandarin Henan, Simplified)',
+        'language': 'Chinese (中原官话河南，简体)',
         'voices': [
             "zh-CN-henan-YundengNeural (Male)"
         ]
     },
     'zh-CN-liaoning': {
-        'language': 'Chinese (Northeastern Mandarin, Simplified)',
+        #'language': 'Chinese (Northeastern Mandarin, Simplified)',
+        'language': 'Chinese (东北官话，简体)',
         'voices': [
             "zh-CN-liaoning-XiaobeiNeural (Female)",
             "zh-CN-liaoning-YunbiaoNeural (Male)"
         ]
     },
     'zh-CN-shaanxi': {
-        'language': 'Chinese (Zhongyuan Mandarin Shaanxi, Simplified)',
+        #'language': 'Chinese (Zhongyuan Mandarin Shaanxi, Simplified)',
+        'language': 'Chinese (中原官话陕西，简体)',
         'voices': [
             "zh-CN-shaanxi-XiaoniNeural (Female)"
         ]
     },
     'zh-CN-shandong': {
-        'language': 'Chinese (Jilu Mandarin, Simplified)',
+        #'language': 'Chinese (Jilu Mandarin, Simplified)',
+        'language': 'Chinese (冀鲁官话，简体)',
         'voices': [
             "zh-CN-shandong-YunxiangNeural (Male)"
         ]
     },
     'zh-CN-sichuan': {
-        'language': 'Chinese (Southwestern Mandarin, Simplified)',
+        #'language': 'Chinese (Southwestern Mandarin, Simplified)',
+        'language': 'Chinese (西南官话，简体)',
         'voices': [
             "zh-CN-sichuan-YunxiNeural (Male)"
         ]
     },
+    'wuu-CN': {
+        #'language': 'Chinese (Wu, Simplified)',
+        'language': 'Chinese (吴语，简体)',
+        'voices': [
+            "wuu-CN-XiaotongNeural (Female)",
+            "wuu-CN-YunzheNeural (Male)"
+        ]
+    },
     'zh-HK': {
-        'language': 'Chinese (Cantonese, Traditional)',
+        #'language': 'Chinese (Cantonese, Traditional)',
+        'language': 'Chinese (粤语，繁体)',
         'voices': [
             "zh-HK-HiuMaanNeural (Female)",
             "zh-HK-WanLungNeural (Male)",
@@ -521,7 +562,8 @@ voices = {
         ]
     },
     'zh-TW': {
-        'language': 'Chinese (Taiwanese Mandarin, Traditional)',
+        #'language': 'Chinese (Taiwanese Mandarin, Traditional)',
+        'language': 'Chinese (台湾，繁体)',
         'voices': [
             "zh-TW-HsiaoChenNeural (Female)",
             "zh-TW-YunJheNeural (Male)",
@@ -692,6 +734,203 @@ voices = {
             "en-US-ShimmerMultilingualNeuralHD (Female)"
         ]
     },
+    'es-AR': {
+        'language': 'Spanish (Argentina)',
+        'voices': [
+            "es-AR-ElenaNeural (Female)",
+            "es-AR-TomasNeural (Male)"
+        ]
+    },
+    'es-BO': {
+        'language': 'Spanish (Bolivia)',
+        'voices': [
+            "es-BO-SofiaNeural (Female)",
+            "es-BO-MarceloNeural (Male)"
+        ]
+    },
+    'es-CL': {
+        'language': 'Spanish (Chile)',
+        'voices': [
+            "es-CL-CatalinaNeural (Female)",
+            "es-CL-LorenzoNeural (Male)"
+        ]
+    },
+    'es-CO': {
+        'language': 'Spanish (Colombia)',
+        'voices': [
+            "es-CO-SalomeNeural (Female)",
+            "es-CO-GonzaloNeural (Male)"
+        ]
+    },
+    'es-CR': {
+        'language': 'Spanish (Costa Rica)',
+        'voices': [
+            "es-CR-MariaNeural (Female)",
+            "es-CR-JuanNeural (Male)"
+        ]
+    },
+    'es-CU': {
+        'language': 'Spanish (Cuba)',
+        'voices': [
+            "es-CU-BelkysNeural (Female)",
+            "es-CU-ManuelNeural (Male)"
+        ]
+    },
+    'es-DO': {
+        'language': 'Spanish (Dominican Republic)',
+        'voices': [
+            "es-DO-RamonaNeural (Female)",
+            "es-DO-EmilioNeural (Male)"
+        ]
+    },
+    'es-EC': {
+        'language': 'Spanish (Ecuador)',
+        'voices': [
+            "es-EC-AndreaNeural (Female)",
+            "es-EC-LuisNeural (Male)"
+        ]
+    },
+    'es-ES': {
+        'language': 'Spanish (Spain)',
+        'voices': [
+            "es-ES-ElviraNeural (Female)",
+            "es-ES-AlvaroNeural (Male)",
+            "es-ES-AbrilNeural (Female)",
+            "es-ES-ArnauNeural (Male)",
+            "es-ES-DarioNeural (Male)",
+            "es-ES-EliasNeural (Male)",
+            "es-ES-EstrellaNeural (Female)",
+            "es-ES-IreneNeural (Female)",
+            "es-ES-LaiaNeural (Female)",
+            "es-ES-LiaNeural (Female)",
+            "es-ES-NilNeural (Male)",
+            "es-ES-SaulNeural (Male)",
+            "es-ES-TeoNeural (Male)",
+            "es-ES-TrianaNeural (Female)",
+            "es-ES-VeraNeural (Female)",
+            "es-ES-XimenaNeural (Female)",
+            "es-ES-ArabellaMultilingualNeural (Female)",
+            "es-ES-IsidoraMultilingualNeural (Female)"
+        ]
+    },
+    'es-GQ': {
+        'language': 'Spanish (Equatorial Guinea)',
+        'voices': [
+            "es-GQ-TeresaNeural (Female)",
+            "es-GQ-JavierNeural (Male)"
+        ]
+    },
+    'es-GT': {
+        'language': 'Spanish (Guatemala)',
+        'voices': [
+            "es-GT-MartaNeural (Female)",
+            "es-GT-AndresNeural (Male)"
+        ]
+    },
+    'es-HN': {
+        'language': 'Spanish (Honduras)',
+        'voices': [
+            "es-HN-KarlaNeural (Female)",
+            "es-HN-CarlosNeural (Male)"
+        ]
+    },
+    'es-MX': {
+        'language': 'Spanish (Mexico)',
+        'voices': [
+            "es-MX-DaliaNeural (Female)",
+            "es-MX-JorgeNeural (Male)",
+            "es-MX-BeatrizNeural (Female)",
+            "es-MX-CandelaNeural (Female)",
+            "es-MX-CarlotaNeural (Female)",
+            "es-MX-CecilioNeural (Male)",
+            "es-MX-GerardoNeural (Male)",
+            "es-MX-LarissaNeural (Female)",
+            "es-MX-LibertoNeural (Male)",
+            "es-MX-LucianoNeural (Male)",
+            "es-MX-MarinaNeural (Female)",
+            "es-MX-NuriaNeural (Female)",
+            "es-MX-PelayoNeural (Male)",
+            "es-MX-RenataNeural (Female)",
+            "es-MX-YagoNeural (Male)"
+        ]
+    },
+    'es-NI': {
+        'language': 'Spanish (Nicaragua)',
+        'voices': [
+            "es-NI-YolandaNeural (Female)",
+            "es-NI-FedericoNeural (Male)"
+        ]
+    },
+    'es-PA': {
+        'language': 'Spanish (Panama)',
+        'voices': [
+            "es-PA-MargaritaNeural (Female)",
+            "es-PA-RobertoNeural (Male)"
+        ]
+    },
+    'es-PE': {
+        'language': 'Spanish (Peru)',
+        'voices': [
+            "es-PE-CamilaNeural (Female)",
+            "es-PE-AlexNeural (Male)"
+        ]
+    },
+    'es-PR': {
+        'language': 'Spanish (Puerto Rico)',
+        'voices': [
+            "es-PR-KarinaNeural (Female)",
+            "es-PR-VictorNeural (Male)"
+        ]
+    },
+    'es-PY': {
+        'language': 'Spanish (Paraguay)',
+        'voices': [
+            "es-PY-TaniaNeural (Female)",
+            "es-PY-MarioNeural (Male)"
+        ]
+    },
+    'es-SV': {
+        'language': 'Spanish (El Salvador)',
+        'voices': [
+            "es-SV-LorenaNeural (Female)",
+            "es-SV-RodrigoNeural (Male)"
+        ]
+    },
+    'es-US': {
+        'language': 'Spanish (United States)',
+        'voices': [
+            "es-US-PalomaNeural (Female)",
+            "es-US-AlonsoNeural (Male)"
+        ]
+    },
+    'es-UY': {
+        'language': 'Spanish (Uruguay)',
+        'voices': [
+            "es-UY-ValentinaNeural (Female)",
+            "es-UY-MateoNeural (Male)"
+        ]
+    },
+    'es-VE': {
+        'language': 'Spanish (Venezuela)',
+        'voices': [
+            "es-VE-PaolaNeural (Female)",
+            "es-VE-SebastianNeural (Male)"
+        ]
+    },
+    'de-AT': {
+        'language': 'German (Austria)',
+        'voices': [
+            "de-AT-IngridNeural (Female)",
+            "de-AT-JonasNeural (Male)"
+        ]
+    },
+    'de-CH': {
+        'language': 'German (Switzerland)',
+        'voices': [
+            "de-CH-LeniNeural (Female)",
+            "de-CH-JanNeural (Male)"
+        ]
+    },
     'de-DE': {
         'language': 'German (Germany)',
         'voices': [
@@ -714,6 +953,74 @@ voices = {
             "de-DE-SeraphinaMultilingualNeural (Female)"
         ]
     },
+    'fr-BE': {
+        'language': 'French (Belgium)',
+        'voices': [
+            "fr-BE-CharlineNeural (Female)",
+            "fr-BE-GerardNeural (Male)"
+        ]
+    },
+    'fr-CA': {
+        'language': 'French (Canada)',
+        'voices': [
+            "fr-CA-SylvieNeural (Female)",
+            "fr-CA-JeanNeural (Male)",
+            "fr-CA-AntoineNeural (Male)",
+            "fr-CA-ThierryNeural1 (Male)"
+        ]
+    },
+    'fr-CH': {
+        'language': 'French (Switzerland)',
+        'voices': [
+            "fr-CH-ArianeNeural (Female)",
+            "fr-CH-FabriceNeural (Male)"
+        ]
+    },
+    'fr-FR': {
+        'language': 'French (France)',
+        'voices': [
+            "fr-FR-DeniseNeural (Female)",
+            "fr-FR-HenriNeural (Male)",
+            "fr-FR-AlainNeural (Male)",
+            "fr-FR-BrigitteNeural (Female)",
+            "fr-FR-CelesteNeural (Female)",
+            "fr-FR-ClaudeNeural (Male)",
+            "fr-FR-CoralieNeural (Female)",
+            "fr-FR-EloiseNeural (Female, Child)",
+            "fr-FR-JacquelineNeural (Female)",
+            "fr-FR-JeromeNeural (Male)",
+            "fr-FR-JosephineNeural (Female)",
+            "fr-FR-MauriceNeural (Male)",
+            "fr-FR-YvesNeural (Male)",
+            "fr-FR-YvetteNeural (Female)",
+            "fr-FR-RemyMultilingualNeural (Male)",
+            "fr-FR-VivienneMultilingualNeural (Female)"
+        ]
+    },
+    'it-IT': {
+        'language': 'Italian (Italy)',
+        'voices': [
+            "it-IT-ElsaNeural (Female)",
+            "it-IT-IsabellaNeural (Female)",
+            "it-IT-DiegoNeural (Male)",
+            "it-IT-BenignoNeural (Male)",
+            "it-IT-CalimeroNeural (Male)",
+            "it-IT-CataldoNeural (Male)",
+            "it-IT-FabiolaNeural (Female)",
+            "it-IT-FiammaNeural (Female)",
+            "it-IT-GianniNeural (Male)",
+            "it-IT-ImeldaNeural (Female)",
+            "it-IT-IrmaNeural (Female)",
+            "it-IT-LisandroNeural (Male)",
+            "it-IT-PalmiraNeural (Female)",
+            "it-IT-PierinaNeural (Female)",
+            "it-IT-RinaldoNeural (Male)",
+            "it-IT-AlessioMultilingualNeural (Male)",
+            "it-IT-IsabellaMultilingualNeural (Female)",
+            "it-IT-MarcelloMultilingualNeural (Male)",
+            "it-IT-GiuseppeNeural (Male)"
+        ]
+    },
     'ja-JP': {
         'language': 'Japanese (Japan)',
         'voices': [
@@ -724,7 +1031,7 @@ voices = {
             "ja-JP-MayuNeural (Female)",
             "ja-JP-NaokiNeural (Male)",
             "ja-JP-ShioriNeural (Female)",
-            "ja-JP-MasaruMultilingualNeural1,3 (Male)"
+            "ja-JP-MasaruMultilingualNeural (Male)"
         ]
     },
     'ko-KR': {
@@ -778,7 +1085,26 @@ styles = {
     "zh-CN-YunyeNeural": ["angry", "calm", "cheerful", "disgruntled", "embarrassed", "fearful", "sad", "serious"],
     "zh-CN-YunzeNeural": ["angry", "calm", "cheerful", "depressed", "disgruntled", "documentary-narration", "fearful", "sad", "serious"]
 }
+# 定义语言组
+lang1 = {"af-ZA", "sq-AL", "am-ET", "ar-EG", "ar-SA", "hy-AM", "az-AZ", "eu-ES", "bn-IN", "bs-BA", "bg-BG", "my-MM", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "hr-HR", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "et-EE", "fil-PH", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "gl-ES", "ka-GE", "de-AT", "de-DE", "de-CH", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "ga-IE", "it-IT", "ja-JP", "jv-ID", "kn-IN", "kk-KZ", "km-KH", "ko-KR", "lo-LA", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "ml-IN", "mt-MT", "mn-MN", "ne-NP", "nb-NO", "ps-AF", "fa-IR", "pl-PL", "pt-BR", "pt-PT", "ro-RO", "ru-RU", "sr-RS", "si-LK", "sk-SK", "sl-SI", "so-SO", "es-MX", "es-ES", "su-ID", "sw-KE", "sv-SE", "ta-IN", "te-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "uz-UZ", "vi-VN", "cy-GB", "zu-ZA"}
 
+lang2 = {"af-ZA", "ar-EG", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG", "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US", "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN", "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN", "mi-NZ", "ne-NP", "nb-NO", "fa-IR", "pl-PL", "pt-BR", "ro-RO", "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE", "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN", "cy-GB"}
+
+lang3 = {"ar-EG", "ar-SA", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "de-AT", "de-DE", "de-CH", "hi-IN", "hu-HU", "id-ID", "it-IT", "ja-JP", "ko-KR", "nb-NO", "pl-PL", "pt-BR", "pt-PT", "ru-RU", "es-MX", "es-ES", "sv-SE", "th-TH", "tr-TR"}
+
+# 定义人名组
+name1 = ["en-US-AndrewMultilingualNeural (Male)", "en-US-AvaMultilingualNeural (Female)", "en-US-BrianMultilingualNeural (Male)", "en-US-EmmaMultilingualNeural (Female)", "en-GB-AdaMultilingualNeural (Female)", "en-GB-OllieMultilingualNeural (Male)", "de-DE-SeraphinaMultilingualNeural (Female)", "de-DE-FlorianMultilingualNeural (Male)", "es-ES-IsidoraMultilingualNeural (Female)", "es-ES-ArabellaMultilingualNeural (Female)", "fr-FR-VivienneMultilingualNeural (Female)", "fr-FR-RemyMultilingualNeural (Male)", "it-IT-IsabellaMultilingualNeural (Female)", "it-IT-MarcelloMultilingualNeural (Male)", "it-IT-AlessioMultilingualNeural (Male)", "ja-JP-MasaruMultilingualNeural (Male)", "pt-BR-ThalitaMultilingualNeural (Female)", "zh-CN-XiaoxiaoMultilingualNeural (Female)", "zh-CN-XiaochenMultilingualNeural (Female)", "zh-CN-YunyiMultilingualNeural (Male)"]
+
+name2 = ["en-US-AlloyMultilingualNeural (Male)", "en-US-EchoMultilingualNeural (Male)", "en-US-FableMultilingualNeural (Neutral)", "en-US-OnyxMultilingualNeural (Male)", "en-US-NovaMultilingualNeural (Female)", "en-US-ShimmerMultilingualNeural (Female)", "en-US-AlloyMultilingualNeuralHD (Male)", "en-US-EchoMultilingualNeuralHD (Male)", "en-US-FableMultilingualNeuralHD (Neutral)", "en-US-OnyxMultilingualNeuralHD (Male)", "en-US-NovaMultilingualNeuralHD (Female)", "en-US-ShimmerMultilingualNeuralHD (Female)"]
+
+name3 = ["en-US-JennyMultilingualNeural (Female)", "en-US-RyanMultilingualNeural (Male)"]
+
+# 创建关系字典
+Multilinguals = {
+    "Multilingual1": {"names": name1, "languages": lang1},
+    "Multilingual2": {"names": name2, "languages": lang2},
+    "Multilingual3": {"names": name3, "languages": lang3}
+}
 Language = [voices[locale]['language'] for locale in voices.keys()]
 for language in Language:
     itm["LanguageCombo"].AddItem(language)
@@ -804,14 +1130,27 @@ def on_language_combo_current_index_changed(ev):
 
 
 def on_name_combo_current_index_changed(ev):
-    global voice_name
     itm["StyleCombo"].Clear()
     selected_voice = itm["NameCombo"].CurrentText.split(' (')[0]
     
     if selected_voice in styles:
         for style in styles[selected_voice]:
             itm["StyleCombo"].AddItem(style)
-    voice_name = itm["NameCombo"].CurrentText
+    itm["MutilCombo"].Clear()
+    itm["MutilCombo"].AddItem('default')
+    itm["MutilCombo"].Enabled = False
+    if "Multilingual" in selected_voice:
+        itm["MutilCombo"].Enabled = True
+        for group_name, data in Multilinguals.items():
+            cleaned_names = [n.split(' (')[0] for n in data["names"]]
+            if selected_voice in cleaned_names:
+                print(group_name)
+                for language in data["languages"]:
+                    itm["MutilCombo"].AddItem(language)
+                break 
+      
+   
+    
 
 def on_name_type_combo_current_index_changed(ev):
     itm["NameCombo"].Clear()
@@ -834,6 +1173,7 @@ if saved_settings:
     itm["NameTypeCombo"].CurrentIndex = saved_settings.get("TYPE", default_settings["TYPE"])
     itm["NameCombo"].CurrentIndex = saved_settings.get("NAME", default_settings["NAME"])
     itm["RateSpinBox"].Value = saved_settings.get("RATE", default_settings["RATE"])
+    itm["PitchSpinBox"].Value = saved_settings.get("PITCH", default_settings["PITCH"])
     itm["StyleCombo"].CurrentIndex = saved_settings.get("STYLE", default_settings["STYLE"])
     itm["StyleDegreeSpinBox"].Value = saved_settings.get("STYLEDEGREE", default_settings["STYLEDEGREE"])
     itm["OutputFormatCombo"].CurrentIndex = saved_settings.get("OUTPUT_FORMATS", default_settings["OUTPUT_FORMATS"])
@@ -852,7 +1192,7 @@ def on_getsub_button_clicked(ev):
 win.On.GetSubButton.Clicked = on_getsub_button_clicked
 
     
-def create_ssml(lang, voice_name, text, rate=None, style=None, styledegree=None):
+def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, styledegree=None, multilingual='default'):
     speak = ET.Element('speak', xmlns="http://www.w3.org/2001/10/synthesis",
                        attrib={
                            "xmlns:mstts": "http://www.w3.org/2001/mstts",
@@ -863,37 +1203,60 @@ def create_ssml(lang, voice_name, text, rate=None, style=None, styledegree=None)
 
     voice = ET.SubElement(speak, 'voice', name=voice_name)
     
+    if multilingual!="default":
+        lang_tag = ET.SubElement(voice, 'lang', attrib={"xml:lang": multilingual})
+        parent_tag = lang_tag
+    else:
+        parent_tag = voice
+
     lines = text.split('\n')
     for line in lines:
         if line.strip():  # 确保不处理空行
-            paragraph = ET.SubElement(voice, 's')  # 创建段落元素
+            paragraph = ET.SubElement(parent_tag, 's')  # 创建段落元素
             if style:
                 express_as_attribs = {'style': style}
                 if styledegree is not None and styledegree != 1.0:
                     express_as_attribs['styledegree'] = f"{styledegree:.2f}"
                 express_as = ET.SubElement(paragraph, 'mstts:express-as', attrib=express_as_attribs)
 
+                prosody_attrs = {}
                 if rate is not None and rate != 1.0:
                     prosody_rate = f"+{(rate-1)*100:.2f}%" if rate > 1 else f"-{(1-rate)*100:.2f}%"
-                    prosody = ET.SubElement(express_as, 'prosody', rate=prosody_rate)
+                    prosody_attrs['rate'] = prosody_rate
+                if pitch is not None and pitch != 1.0:
+                    prosody_pitch = f"+{(pitch-1)*100:.2f}%" if pitch > 1 else f"-{(1-pitch)*100:.2f}%"
+                    prosody_attrs['pitch'] = prosody_pitch
+
+                if prosody_attrs:
+                    prosody = ET.SubElement(express_as, 'prosody', attrib=prosody_attrs)
                     prosody.text = line
                 else:
                     express_as.text = line
             else:
+                prosody_attrs = {}
                 if rate is not None and rate != 1.0:
                     prosody_rate = f"+{(rate-1)*100:.2f}%" if rate > 1 else f"-{(1-rate)*100:.2f}%"
-                    prosody = ET.SubElement(paragraph, 'prosody', rate=prosody_rate)
+                    prosody_attrs['rate'] = prosody_rate
+                if pitch is not None and pitch != 1.0:
+                    prosody_pitch = f"+{(pitch-1)*100:.2f}%" if pitch > 1 else f"-{(1-pitch)*100:.2f}%"
+                    prosody_attrs['pitch'] = prosody_pitch
+
+                if prosody_attrs:
+                    prosody = ET.SubElement(paragraph, 'prosody', attrib=prosody_attrs)
                     prosody.text = line
                 else:
                     paragraph.text = line
-
+    
+    if multilingual:
+        parent_tag.tail = "\n"
+    
     return format_xml(ET.tostring(speak, encoding='unicode'))
 
 
 def format_xml(xml_string):
     parsed = minidom.parseString(xml_string)
     pretty_xml_as_string = parsed.toprettyxml(indent="  ")
-    pretty_xml_as_string = '\n'.join(pretty_xml_as_string.split('\n')[1:])
+    pretty_xml_as_string = '\n'.join([line for line in pretty_xml_as_string.split('\n') if line.strip()])
     return pretty_xml_as_string
 
 def show_warning_message(text):
@@ -932,11 +1295,11 @@ def show_warning_message(text):
 def update_status(message):
     itm["StatusLabel"].Text = message
 
-def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, audio_format, audio_output_config):
+def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config):
     speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
     speech_config.set_speech_synthesis_output_format(audio_format)
     
-    ssml = create_ssml(lang=lang, voice_name=voice_name, text=subtitle, rate=rate, style=style, styledegree=style_degree)
+    ssml = create_ssml(lang=lang, voice_name=voice_name, text=subtitle, rate=rate, style=style, styledegree=style_degree,multilingual= multilingual,pitch=pitch)
     print(ssml)
     
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_output_config)
@@ -946,10 +1309,10 @@ def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, ra
 
 def on_play_button_clicked(ev):
     if itm["Path"].Text == '':
-        show_warning_message('请去配置页选择文件保存路径')
+        show_warning_message('Please go to Configuration to select the audio save path.')
         return
     if itm["ApiKey"].Text == '' or itm["Region"].Text == '':
-        show_warning_message('请去配置页填写区域和API')
+        show_warning_message('Please go to Configuration to enter the API Key.')
         return
     
     update_status("播放中 ...")
@@ -962,7 +1325,11 @@ def on_play_button_clicked(ev):
     style_degree = itm["StyleDegreeSpinBox"].Value
     subtitle = itm["SubtitleTxt"].PlainText
     rate = itm["RateSpinBox"].Value
-
+    pitch = itm["PitchSpinBox"].Value
+    multilingual = itm["MutilCombo"].CurrentText
+    voice_name = itm["NameCombo"].CurrentText
+    print(voice_name)
+    print(multilingual)
     output_format = itm["OutputFormatCombo"].CurrentText
     if output_format in audio_formats:
         audio_format = audio_formats[output_format]
@@ -972,15 +1339,16 @@ def on_play_button_clicked(ev):
 
     audio_output_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
     
-    result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, audio_format, audio_output_config)
+    result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
     stream = speechsdk.AudioDataStream(result)
 
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
         itm["PlayButton"].Text = "播放预览"
         update_status("")
     elif result.reason == speechsdk.ResultReason.Canceled:
+        itm["PlayButton"].Text = "播放预览"
         cancellation_details = result.cancellation_details
-        update_status(f"Failed to generate")
+        update_status(f"合成失败")
         print("Speech synthesis canceled: {}".format(cancellation_details.reason))
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
             print("Error details: {}".format(cancellation_details.error_details))
@@ -1002,17 +1370,19 @@ def on_load_button_clicked(ev):
     if stream and current_context==subtitle:
         stream.save_to_wav_file(filename)
         add_to_media_pool(filename)
-        update_status("加载成功")
+        update_status("Load successful")
         stream =None
     elif not stream and current_context!=subtitle:
-        update_status("合成中 ...")
+        update_status("Generate ...")
         service_region = itm["Region"].Text
         speech_key = itm["ApiKey"].Text
         style = itm["StyleCombo"].CurrentText
         style_degree = itm["StyleDegreeSpinBox"].Value
         subtitle = itm["SubtitleTxt"].PlainText
         rate = itm["RateSpinBox"].Value
-
+        pitch = itm["PitchSpinBox"].Value
+        multilingual = itm["MutilCombo"].CurrentText
+        voice_name = itm["NameCombo"].CurrentText
         output_format = itm["OutputFormatCombo"].CurrentText
         if output_format in audio_formats:
             audio_format = audio_formats[output_format]
@@ -1022,14 +1392,14 @@ def on_load_button_clicked(ev):
 
         audio_output_config = speechsdk.audio.AudioOutputConfig(filename=filename)
         
-        result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, audio_format, audio_output_config)
+        result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
         
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
             add_to_media_pool(filename)
             update_status("加载成功")
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details
-            update_status(f"Failed to generate")
+            update_status(f"合成失败")
             print("Speech synthesis canceled: {}".format(cancellation_details.reason))
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
                 print("Error details: {}".format(cancellation_details.error_details))
@@ -1048,6 +1418,7 @@ def on_reset_button_clicked(ev):
     itm["NameTypeCombo"].CurrentIndex = default_settings["TYPE"]
     itm["NameCombo"].CurrentIndex = default_settings["NAME"]
     itm["RateSpinBox"].Value = default_settings["RATE"]
+    itm["PitchSpinBox"].Value = default_settings["PITCH"]
     itm["StyleCombo"].CurrentIndex = default_settings["STYLE"]
     itm["StyleDegreeSpinBox"].Value = default_settings["STYLEDEGREE"]
     itm["OutputFormatCombo"].CurrentIndex = default_settings["OUTPUT_FORMATS"]
@@ -1072,6 +1443,7 @@ def close_and_save(settings_file):
         "TYPE": itm["NameTypeCombo"].CurrentIndex,
         "NAME": itm["NameCombo"].CurrentIndex,
         "RATE": itm["RateSpinBox"].Value,
+        "PITCH": itm["PitchSpinBox"].Value,
         "STYLE": itm["StyleCombo"].CurrentIndex,
         "STYLEDEGREE": itm["StyleDegreeSpinBox"].Value,
         "OUTPUT_FORMATS": itm["OutputFormatCombo"].CurrentIndex,
@@ -1080,7 +1452,7 @@ def close_and_save(settings_file):
     save_settings(settings, settings_file)
 
 def on_open_link_button_clicked(ev):
-    webbrowser.open("https://www.yuque.com/heiba-3jzd7/hk6o2e/rv2fqrqcay0rxpvm")
+    webbrowser.open("https://www.paypal.me/heiba2wk")
 win.On.OpenLinkButton.Clicked = on_open_link_button_clicked
 
 def on_close(ev):
