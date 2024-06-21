@@ -3,6 +3,7 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import sys
 import os
+import time
 import webbrowser
 import json
 import azure.cognitiveservices.speech as speechsdk
@@ -84,6 +85,7 @@ default_settings = {
     "RATE": 1.0,
     "PITCH": 1.0,
     "STYLE": 0,
+    "BREAKTIME":0,
     "STYLEDEGREE": 1.0,
     "OUTPUT_FORMATS":0
 }
@@ -192,7 +194,7 @@ win = dispatcher.AddWindow(
     {
         "ID": 'MyWin',
         "WindowTitle": 'TTS 1.0',
-        "Geometry": [700, 300, 400, 480],
+        "Geometry": [700, 300, 425, 600],
         "Spacing": 10,
     },
  [
@@ -206,17 +208,22 @@ win = dispatcher.AddWindow(
                         ui.VGroup(
                             {"Weight": 1},
                             [
+
                                 ui.HGroup(
                                     {"Weight": 1},
                                     [
                                         ui.TextEdit({"ID": 'SubtitleTxt', "Text": '',"Weight": 1}),
                                     ]
                                 ),
-                                
+
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Button({"ID": 'GetSubButton', "Text": 'GetSubtitle'}),
+                                       
+                                        ui.SpinBox({"ID": 'BreakSpinBox', "Value": 0, "Minimum": 0, "Maximum": 5000, "SingleStep": 50, "Weight": 0.1}),
+                                        ui.Label({"ID": 'BreakLabel', "Text": 'ms',  "Weight": 0.1}),
+                                        ui.Button({"ID": 'BreakButton', "Text": 'Break', "Weight": 0.1}),
+                                        ui.Button({"ID": 'GetSubButton', "Text": 'Get Subtitle From Timeline', "Weight": 1}),
 
                                     ]
                                 ),
@@ -246,13 +253,14 @@ win = dispatcher.AddWindow(
                                         
                                         ui.Label({"ID": 'StyleLabel', "Text": 'Style', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'StyleCombo', "Text": '', "Weight": 0.8}),
-                                       ]
+                                        
+                                    ]
                                 ),
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'StyleDegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'StyleDegreeLabel', "Text": 'Style Degree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'StyleDegreeSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'StyleDegreeSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
@@ -1178,15 +1186,21 @@ if saved_settings:
 
 def on_getsub_button_clicked(ev):
     subtitle = ''
-    subtitleTrackIndex = 1  
-    subtitleTrackItems = currentTimeline.GetItemListInTrack("subtitle", subtitleTrackIndex)
+    
+    track_count = currentTimeline.GetTrackCount("subtitle")
 
-    for item in subtitleTrackItems:
-        sub = item.GetName()
-        subtitle += sub + "\n"
-
+    for track_index in range(1, track_count + 1):
+        track_enabled = currentTimeline.GetIsTrackEnabled("subtitle", track_index)
+        if track_enabled:
+            subtitleTrackItems = currentTimeline.GetItemListInTrack("subtitle", track_index)
+            
+            for item in subtitleTrackItems:
+                sub = item.GetName()
+                subtitle += sub + "\n"
+    
     itm["SubtitleTxt"].Text = subtitle
     print(subtitle)
+
 win.On.GetSubButton.Clicked = on_getsub_button_clicked
 
     
@@ -1201,7 +1215,7 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
     voice = ET.SubElement(speak, 'voice', name=voice_name)
     
-    if multilingual!="default":
+    if multilingual != "default":
         lang_tag = ET.SubElement(voice, 'lang', attrib={"xml:lang": multilingual})
         parent_tag = lang_tag
     else:
@@ -1227,9 +1241,9 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
                 if prosody_attrs:
                     prosody = ET.SubElement(express_as, 'prosody', attrib=prosody_attrs)
-                    prosody.text = line
+                    process_text_with_breaks(prosody, line)
                 else:
-                    express_as.text = line
+                    process_text_with_breaks(express_as, line)
             else:
                 prosody_attrs = {}
                 if rate is not None and rate != 1.0:
@@ -1241,21 +1255,44 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
                 if prosody_attrs:
                     prosody = ET.SubElement(paragraph, 'prosody', attrib=prosody_attrs)
-                    prosody.text = line
+                    process_text_with_breaks(prosody, line)
                 else:
-                    paragraph.text = line
-    
+                    process_text_with_breaks(paragraph, line)
+
     if multilingual:
         parent_tag.tail = "\n"
     
     return format_xml(ET.tostring(speak, encoding='unicode'))
 
+def process_text_with_breaks(parent, text):
+    parts = text.split('<break')
+    for i, part in enumerate(parts):
+        if i == 0:
+            parent.text = part
+        else:
+            # 查找结束符
+            end_idx = part.find('>')
+            if end_idx != -1:
+                break_tag = '<break' + part[:end_idx + 1]
+                remaining_text = part[end_idx + 1:]
+                
+                # 插入 break 标签
+                break_elem = ET.fromstring(break_tag)
+                parent.append(break_elem)
+                
+                # 插入后续文本
+                if remaining_text:
+                    if len(parent) > 0 and parent[-1].tail is None:
+                        parent[-1].tail = remaining_text
+                    else:
+                        parent.text = remaining_text
 
 def format_xml(xml_string):
     parsed = minidom.parseString(xml_string)
     pretty_xml_as_string = parsed.toprettyxml(indent="  ")
     pretty_xml_as_string = '\n'.join([line for line in pretty_xml_as_string.split('\n') if line.strip()])
     return pretty_xml_as_string
+
 
 def show_warning_message(text):
     msgbox = dispatcher.AddWindow(
@@ -1326,8 +1363,6 @@ def on_play_button_clicked(ev):
     pitch = itm["PitchSpinBox"].Value
     multilingual = itm["MutilCombo"].CurrentText
     voice_name = itm["NameCombo"].CurrentText
-    print(voice_name)
-    print(multilingual)
     output_format = itm["OutputFormatCombo"].CurrentText
     if output_format in audio_formats:
         audio_format = audio_formats[output_format]
@@ -1366,6 +1401,7 @@ def on_load_button_clicked(ev):
     print(f"stream:{stream}")
     if stream and current_context==subtitle:
         stream.save_to_wav_file(filename)
+        time.sleep(1)
         add_to_media_pool(filename)
         update_status("Load successful")
         stream =None
@@ -1392,6 +1428,7 @@ def on_load_button_clicked(ev):
         result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
         
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            time.sleep(1)
             add_to_media_pool(filename)
             update_status("Load successful")
         elif result.reason == speechsdk.ResultReason.Canceled:
@@ -1406,6 +1443,14 @@ def on_load_button_clicked(ev):
 
 win.On.LoadButton.Clicked = on_load_button_clicked
 
+def on_break_button_clicked(ev):
+    breaktime =  itm["BreakSpinBox"].Value
+    # 插入<break>标志
+    itm["SubtitleTxt"].InsertPlainText(f'<break time="{breaktime}ms" />')
+
+win.On.BreakButton.Clicked = on_break_button_clicked
+
+
 
 def on_reset_button_clicked(ev):
     #itm["ApiKey"].Text = default_settings["API_KEY"]
@@ -1415,6 +1460,7 @@ def on_reset_button_clicked(ev):
     itm["NameTypeCombo"].CurrentIndex = default_settings["TYPE"]
     itm["NameCombo"].CurrentIndex = default_settings["NAME"]
     itm["RateSpinBox"].Value = default_settings["RATE"]
+    itm["BreakSpinBox"].Value = default_settings["BREAKTIME"]
     itm["PitchSpinBox"].Value = default_settings["PITCH"]
     itm["StyleCombo"].CurrentIndex = default_settings["STYLE"]
     itm["StyleDegreeSpinBox"].Value = default_settings["STYLEDEGREE"]
