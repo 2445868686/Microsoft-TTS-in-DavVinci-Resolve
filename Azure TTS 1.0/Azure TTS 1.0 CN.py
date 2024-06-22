@@ -3,6 +3,7 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import sys
 import os
+import time
 import webbrowser
 import json
 import azure.cognitiveservices.speech as speechsdk
@@ -84,6 +85,7 @@ default_settings = {
     "RATE": 1.0,
     "PITCH": 1.0,
     "STYLE": 0,
+    "BREAKTIME":50,
     "STYLEDEGREE": 1.0,
     "OUTPUT_FORMATS":0
 }
@@ -193,7 +195,7 @@ win = dispatcher.AddWindow(
     {
         "ID": 'MyWin',
         "WindowTitle": 'TTS 1.0',
-        "Geometry": [700, 300, 400, 480],
+        "Geometry": [700, 300, 425, 600],
         "Spacing": 10,
     },
  [
@@ -207,17 +209,22 @@ win = dispatcher.AddWindow(
                         ui.VGroup(
                             {"Weight": 1},
                             [
+
                                 ui.HGroup(
                                     {"Weight": 1},
                                     [
                                         ui.TextEdit({"ID": 'SubtitleTxt', "Text": '',"Weight": 1}),
                                     ]
                                 ),
-                                
+
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Button({"ID": 'GetSubButton', "Text": 'GetSubtitle'}),
+                                       
+                                        ui.SpinBox({"ID": 'BreakSpinBox', "Value": 50, "Minimum": 0, "Maximum": 5000, "SingleStep": 50, "Weight": 0.1}),
+                                        ui.Label({"ID": 'BreakLabel', "Text": 'ms',  "Weight": 0.1}),
+                                        ui.Button({"ID": 'BreakButton', "Text": 'Break', "Weight": 0.1}),
+                                        ui.Button({"ID": 'GetSubButton', "Text": 'Get Subtitle From Timeline', "Weight": 1}),
 
                                     ]
                                 ),
@@ -236,8 +243,8 @@ win = dispatcher.AddWindow(
                                     [
                                         ui.Label({"ID": 'NameLabel', "Text": 'Name', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'NameCombo', "Text": '', "Weight": 0.8}),
-                                        ui.Label({"ID": 'MutilLabel', "Text": 'Multilingual', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
-                                        ui.ComboBox({"ID": 'MutilCombo', "Text": '', "Weight": 0.2}),      
+                                        ui.Label({"ID": 'MultilingualLabel', "Text": 'Multilingual', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.ComboBox({"ID": 'MultilingualCombo', "Text": '', "Weight": 0.2}),      
                                   
                                     ]
                                 ),
@@ -247,13 +254,14 @@ win = dispatcher.AddWindow(
                                         
                                         ui.Label({"ID": 'StyleLabel', "Text": 'Style', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'StyleCombo', "Text": '', "Weight": 0.8}),
-                                       ]
+                                        
+                                    ]
                                 ),
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
                                         
-                                        ui.Label({"ID": 'StyleDegreeLabel', "Text": 'StyleDegree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'StyleDegreeLabel', "Text": 'Style Degree', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.Slider({"ID": 'StyleDegreeSlider', "Value": 100, "Minimum": 0, "Maximum": 300,  "Orientation": "Horizontal", "Weight": 0.5}),
                                         ui.DoubleSpinBox({"ID": 'StyleDegreeSpinBox', "Value": 1.0, "Minimum": 0.0, "Maximum": 3.0, "SingleStep": 0.01, "Weight": 0.3}),
                                     ]
@@ -370,11 +378,11 @@ win = dispatcher.AddWindow(
 )
 
 itm = win.GetItems()
-
 # 汉化界面
 itm["GetSubButton"].Text = "从时间线获取字幕"
+itm["BreakButton"].Text = "停顿"
 itm["LanguageLabel"].Text = "语言"
-itm["MutilLabel"].Text = "多语言"
+itm["MultilingualLabel"].Text = "多语言"
 itm["NameTypeLabel"].Text = "类型"
 itm["NameLabel"].Text = "名称"
 itm["StyleLabel"].Text = "风格"
@@ -390,9 +398,8 @@ itm["ApiKeyLabel"].Text = "API 密钥"
 itm["PathLabel"].Text = "保存路径"
 itm["Browse"].Text = "浏览"
 itm["StatusLabel"].Text = ""
-
 itm["MyStack"].CurrentIndex = 0
-itm["MyTabs"].AddTab("文本转语音")
+itm["MyTabs"].AddTab("文字转语音")
 itm["MyTabs"].AddTab("配置")
 
 def on_style_degree_slider_value_changed(ev):
@@ -445,7 +452,7 @@ for fmt in audio_formats.keys():
 # 初始化 subtitle 变量
 subtitle = ""
 lang = ""
-multilingual='default'
+multilingual='默认'
 current_context=""
 ssml = ''
 voice_name = ""
@@ -1085,26 +1092,208 @@ styles = {
     "zh-CN-YunyeNeural": ["angry", "calm", "cheerful", "disgruntled", "embarrassed", "fearful", "sad", "serious"],
     "zh-CN-YunzeNeural": ["angry", "calm", "cheerful", "depressed", "disgruntled", "documentary-narration", "fearful", "sad", "serious"]
 }
-# 定义语言组
-lang1 = {"af-ZA", "sq-AL", "am-ET", "ar-EG", "ar-SA", "hy-AM", "az-AZ", "eu-ES", "bn-IN", "bs-BA", "bg-BG", "my-MM", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "hr-HR", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "et-EE", "fil-PH", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "gl-ES", "ka-GE", "de-AT", "de-DE", "de-CH", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "ga-IE", "it-IT", "ja-JP", "jv-ID", "kn-IN", "kk-KZ", "km-KH", "ko-KR", "lo-LA", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "ml-IN", "mt-MT", "mn-MN", "ne-NP", "nb-NO", "ps-AF", "fa-IR", "pl-PL", "pt-BR", "pt-PT", "ro-RO", "ru-RU", "sr-RS", "si-LK", "sk-SK", "sl-SI", "so-SO", "es-MX", "es-ES", "su-ID", "sw-KE", "sv-SE", "ta-IN", "te-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "uz-UZ", "vi-VN", "cy-GB", "zu-ZA"}
-
-lang2 = {"af-ZA", "ar-EG", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG", "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US", "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN", "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN", "mi-NZ", "ne-NP", "nb-NO", "fa-IR", "pl-PL", "pt-BR", "ro-RO", "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE", "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN", "cy-GB"}
-
-lang3 = {"ar-EG", "ar-SA", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "de-AT", "de-DE", "de-CH", "hi-IN", "hu-HU", "id-ID", "it-IT", "ja-JP", "ko-KR", "nb-NO", "pl-PL", "pt-BR", "pt-PT", "ru-RU", "es-MX", "es-ES", "sv-SE", "th-TH", "tr-TR"}
-
-# 定义人名组
-name1 = ["en-US-AndrewMultilingualNeural (Male)", "en-US-AvaMultilingualNeural (Female)", "en-US-BrianMultilingualNeural (Male)", "en-US-EmmaMultilingualNeural (Female)", "en-GB-AdaMultilingualNeural (Female)", "en-GB-OllieMultilingualNeural (Male)", "de-DE-SeraphinaMultilingualNeural (Female)", "de-DE-FlorianMultilingualNeural (Male)", "es-ES-IsidoraMultilingualNeural (Female)", "es-ES-ArabellaMultilingualNeural (Female)", "fr-FR-VivienneMultilingualNeural (Female)", "fr-FR-RemyMultilingualNeural (Male)", "it-IT-IsabellaMultilingualNeural (Female)", "it-IT-MarcelloMultilingualNeural (Male)", "it-IT-AlessioMultilingualNeural (Male)", "ja-JP-MasaruMultilingualNeural (Male)", "pt-BR-ThalitaMultilingualNeural (Female)", "zh-CN-XiaoxiaoMultilingualNeural (Female)", "zh-CN-XiaochenMultilingualNeural (Female)", "zh-CN-YunyiMultilingualNeural (Male)"]
-
-name2 = ["en-US-AlloyMultilingualNeural (Male)", "en-US-EchoMultilingualNeural (Male)", "en-US-FableMultilingualNeural (Neutral)", "en-US-OnyxMultilingualNeural (Male)", "en-US-NovaMultilingualNeural (Female)", "en-US-ShimmerMultilingualNeural (Female)", "en-US-AlloyMultilingualNeuralHD (Male)", "en-US-EchoMultilingualNeuralHD (Male)", "en-US-FableMultilingualNeuralHD (Neutral)", "en-US-OnyxMultilingualNeuralHD (Male)", "en-US-NovaMultilingualNeuralHD (Female)", "en-US-ShimmerMultilingualNeuralHD (Female)"]
-
-name3 = ["en-US-JennyMultilingualNeural (Female)", "en-US-RyanMultilingualNeural (Male)"]
-
-# 创建关系字典
-Multilinguals = {
-    "Multilingual1": {"names": name1, "languages": lang1},
-    "Multilingual2": {"names": name2, "languages": lang2},
-    "Multilingual3": {"names": name3, "languages": lang3}
+# 汉化映射字典
+style_translation = {
+    "cheerful": "高兴",
+    "angry": "愤怒",
+    "chat": "聊天",
+    "customerservice": "客服",
+    "empathetic": "有同情心的",
+    "excited": "兴奋",
+    "friendly": "友好",
+    "hopeful": "有希望的",
+    "narration-professional": "专业叙述",
+    "newscast-casual": "新闻播报-休闲",
+    "newscast-formal": "新闻播报-正式",
+    "newscast": "新闻播报",
+    "sad": "悲伤",
+    "shouting": "喊叫",
+    "terrified": "害怕",
+    "unfriendly": "不友好",
+    "whispering": "耳语",
+    "whisper": "耳语",
+    "affectionate": "亲切",
+    "calm": "平静",
+    "disgruntled": "不满",
+    "embarrassed": "尴尬",
+    "fearful": "害怕",
+    "gentle": "温柔",
+    "serious": "严肃",
+    "assistant": "助手",
+    "chat-casual": "聊天-休闲",
+    "lyrical": "抒情",
+    "poetry-reading": "诗歌朗诵",
+    "sorry": "抱歉",
+    "advertisement-upbeat": "广告-积极",
+    "depressed": "沮丧",
+    "envious": "嫉妒",
+    "documentary-narration": "纪录片叙述",
+    "narration-relaxed": "叙述-放松",
+    "sports-commentary": "体育评论",
+    "sports-commentary-excited": "体育评论-兴奋"
 }
+# 翻译成中文
+def translate_styles_to_chinese(style_code):
+    return style_translation.get(style_code, style_code)
+
+def get_original_style(chinese_style):
+    for eng, chi in style_translation.items():
+        if chi == chinese_style:
+            return eng
+    return chinese_style  # 如果找不到对应的英文风格，返回原始中文风格
+
+# 定义多语言和人名组
+Multilinguals = {
+    "Multilingual1": {
+        "names": [
+            "en-US-AndrewMultilingualNeural (Male)", "en-US-AvaMultilingualNeural (Female)", "en-US-BrianMultilingualNeural (Male)", 
+            "en-US-EmmaMultilingualNeural (Female)", "en-GB-AdaMultilingualNeural (Female)", "en-GB-OllieMultilingualNeural (Male)", 
+            "de-DE-SeraphinaMultilingualNeural (Female)", "de-DE-FlorianMultilingualNeural (Male)", "es-ES-IsidoraMultilingualNeural (Female)", 
+            "es-ES-ArabellaMultilingualNeural (Female)", "fr-FR-VivienneMultilingualNeural (Female)", "fr-FR-RemyMultilingualNeural (Male)", 
+            "it-IT-IsabellaMultilingualNeural (Female)", "it-IT-MarcelloMultilingualNeural (Male)", "it-IT-AlessioMultilingualNeural (Male)", 
+            "ja-JP-MasaruMultilingualNeural (Male)", "pt-BR-ThalitaMultilingualNeural (Female)", "zh-CN-XiaoxiaoMultilingualNeural (Female)", 
+            "zh-CN-XiaochenMultilingualNeural (Female)", "zh-CN-YunyiMultilingualNeural (Male)"
+        ],
+        "languages": {
+            "af-ZA", "sq-AL", "am-ET", "ar-EG", "ar-SA", "hy-AM", "az-AZ", "eu-ES", "bn-IN", "bs-BA", "bg-BG", "my-MM", "ca-ES", "zh-HK", 
+            "zh-CN", "zh-TW", "hr-HR", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", 
+            "et-EE", "fil-PH", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "gl-ES", "ka-GE", "de-AT", "de-DE", "de-CH", "el-GR", "he-IL", 
+            "hi-IN", "hu-HU", "is-IS", "id-ID", "ga-IE", "it-IT", "ja-JP", "jv-ID", "kn-IN", "kk-KZ", "km-KH", "ko-KR", "lo-LA", "lv-LV", 
+            "lt-LT", "mk-MK", "ms-MY", "ml-IN", "mt-MT", "mn-MN", "ne-NP", "nb-NO", "ps-AF", "fa-IR", "pl-PL", "pt-BR", "pt-PT", "ro-RO", 
+            "ru-RU", "sr-RS", "si-LK", "sk-SK", "sl-SI", "so-SO", "es-MX", "es-ES", "su-ID", "sw-KE", "sv-SE", "ta-IN", "te-IN", "th-TH", 
+            "tr-TR", "uk-UA", "ur-PK", "uz-UZ", "vi-VN", "cy-GB", "zu-ZA"
+        }
+    },
+    "Multilingual2": {
+        "names": [
+            "en-US-AlloyMultilingualNeural (Male)", "en-US-EchoMultilingualNeural (Male)", "en-US-FableMultilingualNeural (Neutral)", 
+            "en-US-OnyxMultilingualNeural (Male)", "en-US-NovaMultilingualNeural (Female)", "en-US-ShimmerMultilingualNeural (Female)", 
+            "en-US-AlloyMultilingualNeuralHD (Male)", "en-US-EchoMultilingualNeuralHD (Male)", "en-US-FableMultilingualNeuralHD (Neutral)", 
+            "en-US-OnyxMultilingualNeuralHD (Male)", "en-US-NovaMultilingualNeuralHD (Female)", "en-US-ShimmerMultilingualNeuralHD (Female)"
+        ],
+        "languages": {
+            "af-ZA", "ar-EG", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG", "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US", 
+            "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN", 
+            "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN", "mi-NZ", "ne-NP", "nb-NO", "fa-IR", "pl-PL", "pt-BR", "ro-RO", 
+            "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE", "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN", 
+            "cy-GB"
+        }
+    },
+    "Multilingual3": {
+        "names": ["en-US-JennyMultilingualNeural (Female)", "en-US-RyanMultilingualNeural (Male)"],
+        "languages": {
+            "ar-EG", "ar-SA", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", 
+            "en-IE", "en-GB", "en-US", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "de-AT", "de-DE", "de-CH", "hi-IN", "hu-HU", "id-ID", 
+            "it-IT", "ja-JP", "ko-KR", "nb-NO", "pl-PL", "pt-BR", "pt-PT", "ru-RU", "es-MX", "es-ES", "sv-SE", "th-TH", "tr-TR"
+        }
+    }
+}
+
+# 汉化映射字典
+lang_translation = {
+    "af-ZA": "南非语（南非）",
+    "sq-AL": "阿尔巴尼亚语（阿尔巴尼亚）",
+    "am-ET": "阿姆哈拉语（埃塞俄比亚）",
+    "ar-EG": "阿拉伯语（埃及）",
+    "ar-SA": "阿拉伯语（沙特阿拉伯）",
+    "hy-AM": "亚美尼亚语（亚美尼亚）",
+    "az-AZ": "阿塞拜疆语（阿塞拜疆）",
+    "eu-ES": "巴斯克语（西班牙）",
+    "bn-IN": "孟加拉语（印度）",
+    "bs-BA": "波斯尼亚语（波斯尼亚和黑塞哥维那）",
+    "bg-BG": "保加利亚语（保加利亚）",
+    "my-MM": "缅甸语（缅甸）",
+    "ca-ES": "加泰罗尼亚语（西班牙）",
+    "zh-HK": "中文（香港）",
+    "zh-CN": "中文（简体，中国）",
+    "zh-TW": "中文（繁体，台湾）",
+    "hr-HR": "克罗地亚语（克罗地亚）",
+    "cs-CZ": "捷克语（捷克）",
+    "da-DK": "丹麦语（丹麦）",
+    "nl-BE": "荷兰语（比利时）",
+    "nl-NL": "荷兰语（荷兰）",
+    "en-AU": "英语（澳大利亚）",
+    "en-CA": "英语（加拿大）",
+    "en-HK": "英语（香港）",
+    "en-IN": "英语（印度）",
+    "en-IE": "英语（爱尔兰）",
+    "en-GB": "英语（英国）",
+    "en-US": "英语（美国）",
+    "et-EE": "爱沙尼亚语（爱沙尼亚）",
+    "fil-PH": "菲律宾语（菲律宾）",
+    "fi-FI": "芬兰语（芬兰）",
+    "fr-BE": "法语（比利时）",
+    "fr-CA": "法语（加拿大）",
+    "fr-FR": "法语（法国）",
+    "fr-CH": "法语（瑞士）",
+    "gl-ES": "加利西亚语（西班牙）",
+    "ka-GE": "格鲁吉亚语（格鲁吉亚）",
+    "de-AT": "德语（奥地利）",
+    "de-DE": "德语（德国）",
+    "de-CH": "德语（瑞士）",
+    "el-GR": "希腊语（希腊）",
+    "he-IL": "希伯来语（以色列）",
+    "hi-IN": "印地语（印度）",
+    "hu-HU": "匈牙利语（匈牙利）",
+    "is-IS": "冰岛语（冰岛）",
+    "id-ID": "印度尼西亚语（印度尼西亚）",
+    "ga-IE": "爱尔兰语（爱尔兰）",
+    "it-IT": "意大利语（意大利）",
+    "ja-JP": "日语（日本）",
+    "jv-ID": "爪哇语（印度尼西亚）",
+    "kn-IN": "卡纳达语（印度）",
+    "kk-KZ": "哈萨克语（哈萨克斯坦）",
+    "km-KH": "高棉语（柬埔寨）",
+    "ko-KR": "韩语（韩国）",
+    "lo-LA": "老挝语（老挝）",
+    "lv-LV": "拉脱维亚语（拉脱维亚）",
+    "lt-LT": "立陶宛语（立陶宛）",
+    "mk-MK": "马其顿语（北马其顿）",
+    "ms-MY": "马来语（马来西亚）",
+    "ml-IN": "马拉雅拉姆语（印度）",
+    "mt-MT": "马耳他语（马耳他）",
+    "mn-MN": "蒙古语（蒙古）",
+    "ne-NP": "尼泊尔语（尼泊尔）",
+    "nb-NO": "挪威语（挪威）",
+    "ps-AF": "普什图语（阿富汗）",
+    "fa-IR": "波斯语（伊朗）",
+    "pl-PL": "波兰语（波兰）",
+    "pt-BR": "葡萄牙语（巴西）",
+    "pt-PT": "葡萄牙语（葡萄牙）",
+    "ro-RO": "罗马尼亚语（罗马尼亚）",
+    "ru-RU": "俄语（俄罗斯）",
+    "sr-RS": "塞尔维亚语（塞尔维亚）",
+    "si-LK": "僧伽罗语（斯里兰卡）",
+    "sk-SK": "斯洛伐克语（斯洛伐克）",
+    "sl-SI": "斯洛文尼亚语（斯洛文尼亚）",
+    "so-SO": "索马里语（索马里）",
+    "es-MX": "西班牙语（墨西哥）",
+    "es-ES": "西班牙语（西班牙）",
+    "su-ID": "巽他语（印度尼西亚）",
+    "sw-KE": "斯瓦希里语（肯尼亚）",
+    "sv-SE": "瑞典语（瑞典）",
+    "ta-IN": "泰米尔语（印度）",
+    "te-IN": "泰卢固语（印度）",
+    "th-TH": "泰语（泰国）",
+    "tr-TR": "土耳其语（土耳其）",
+    "uk-UA": "乌克兰语（乌克兰）",
+    "ur-PK": "乌尔都语（巴基斯坦）",
+    "uz-UZ": "乌兹别克语（乌兹别克斯坦）",
+    "vi-VN": "越南语（越南）",
+    "cy-GB": "威尔士语（英国）",
+    "zu-ZA": "祖鲁语（南非）"
+}
+
+# 翻译成中文
+def translate_lang_to_chinese(lang_code):
+    return lang_translation.get(lang_code, lang_code)
+
+def get_original_lang(chinese_lang):
+    for lang_code, lang_name in lang_translation.items():
+        if lang_name == chinese_lang:
+            return lang_code
+    return chinese_lang
+
 Language = [voices[locale]['language'] for locale in voices.keys()]
 for language in Language:
     itm["LanguageCombo"].AddItem(language)
@@ -1131,22 +1320,28 @@ def on_language_combo_current_index_changed(ev):
 
 def on_name_combo_current_index_changed(ev):
     itm["StyleCombo"].Clear()
+    itm["StyleCombo"].AddItem('默认')
+    itm["StyleCombo"].Enabled = False
     selected_voice = itm["NameCombo"].CurrentText.split(' (')[0]
     
     if selected_voice in styles:
+        itm["StyleCombo"].Enabled = True
         for style in styles[selected_voice]:
-            itm["StyleCombo"].AddItem(style)
-    itm["MutilCombo"].Clear()
-    itm["MutilCombo"].AddItem('default')
-    itm["MutilCombo"].Enabled = False
+            chinese_style=translate_styles_to_chinese(style)
+            itm["StyleCombo"].AddItem(chinese_style)
+
+    itm["MultilingualCombo"].Clear()
+    itm["MultilingualCombo"].AddItem('默认')
+    itm["MultilingualCombo"].Enabled = False
     if "Multilingual" in selected_voice:
-        itm["MutilCombo"].Enabled = True
+        itm["MultilingualCombo"].Enabled = True
         for group_name, data in Multilinguals.items():
             cleaned_names = [n.split(' (')[0] for n in data["names"]]
             if selected_voice in cleaned_names:
                 print(group_name)
                 for language in data["languages"]:
-                    itm["MutilCombo"].AddItem(language)
+                    chinese_lang = translate_lang_to_chinese(language)
+                    itm["MultilingualCombo"].AddItem(chinese_lang)
                 break 
       
    
@@ -1180,19 +1375,25 @@ if saved_settings:
 
 def on_getsub_button_clicked(ev):
     subtitle = ''
-    subtitleTrackIndex = 1  
-    subtitleTrackItems = currentTimeline.GetItemListInTrack("subtitle", subtitleTrackIndex)
+    
+    track_count = currentTimeline.GetTrackCount("subtitle")
 
-    for item in subtitleTrackItems:
-        sub = item.GetName()
-        subtitle += sub + "\n"
-
+    for track_index in range(1, track_count + 1):
+        track_enabled = currentTimeline.GetIsTrackEnabled("subtitle", track_index)
+        if track_enabled:
+            subtitleTrackItems = currentTimeline.GetItemListInTrack("subtitle", track_index)
+            
+            for item in subtitleTrackItems:
+                sub = item.GetName()
+                subtitle += sub + "\n"
+    
     itm["SubtitleTxt"].Text = subtitle
     print(subtitle)
+
 win.On.GetSubButton.Clicked = on_getsub_button_clicked
 
     
-def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, styledegree=None, multilingual='default'):
+def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, styledegree=None, multilingual='默认'):
     speak = ET.Element('speak', xmlns="http://www.w3.org/2001/10/synthesis",
                        attrib={
                            "xmlns:mstts": "http://www.w3.org/2001/mstts",
@@ -1203,7 +1404,7 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
     voice = ET.SubElement(speak, 'voice', name=voice_name)
     
-    if multilingual!="default":
+    if multilingual != "默认":
         lang_tag = ET.SubElement(voice, 'lang', attrib={"xml:lang": multilingual})
         parent_tag = lang_tag
     else:
@@ -1213,7 +1414,7 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
     for line in lines:
         if line.strip():  # 确保不处理空行
             paragraph = ET.SubElement(parent_tag, 's')  # 创建段落元素
-            if style:
+            if style!= "默认":
                 express_as_attribs = {'style': style}
                 if styledegree is not None and styledegree != 1.0:
                     express_as_attribs['styledegree'] = f"{styledegree:.2f}"
@@ -1229,9 +1430,9 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
                 if prosody_attrs:
                     prosody = ET.SubElement(express_as, 'prosody', attrib=prosody_attrs)
-                    prosody.text = line
+                    process_text_with_breaks(prosody, line)
                 else:
-                    express_as.text = line
+                    process_text_with_breaks(express_as, line)
             else:
                 prosody_attrs = {}
                 if rate is not None and rate != 1.0:
@@ -1243,21 +1444,44 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
                 if prosody_attrs:
                     prosody = ET.SubElement(paragraph, 'prosody', attrib=prosody_attrs)
-                    prosody.text = line
+                    process_text_with_breaks(prosody, line)
                 else:
-                    paragraph.text = line
-    
+                    process_text_with_breaks(paragraph, line)
+
     if multilingual:
         parent_tag.tail = "\n"
     
     return format_xml(ET.tostring(speak, encoding='unicode'))
 
+def process_text_with_breaks(parent, text):
+    parts = text.split('<break')
+    for i, part in enumerate(parts):
+        if i == 0:
+            parent.text = part
+        else:
+            # 查找结束符
+            end_idx = part.find('>')
+            if end_idx != -1:
+                break_tag = '<break' + part[:end_idx + 1]
+                remaining_text = part[end_idx + 1:]
+                
+                # 插入 break 标签
+                break_elem = ET.fromstring(break_tag)
+                parent.append(break_elem)
+                
+                # 插入后续文本
+                if remaining_text:
+                    if len(parent) > 0 and parent[-1].tail is None:
+                        parent[-1].tail = remaining_text
+                    else:
+                        parent.text = remaining_text
 
 def format_xml(xml_string):
     parsed = minidom.parseString(xml_string)
     pretty_xml_as_string = parsed.toprettyxml(indent="  ")
     pretty_xml_as_string = '\n'.join([line for line in pretty_xml_as_string.split('\n') if line.strip()])
     return pretty_xml_as_string
+
 
 def show_warning_message(text):
     msgbox = dispatcher.AddWindow(
@@ -1309,10 +1533,10 @@ def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, ra
 
 def on_play_button_clicked(ev):
     if itm["Path"].Text == '':
-        show_warning_message('Please go to Configuration to select the audio save path.')
+        show_warning_message('前往配置栏选择保存路径.')
         return
     if itm["ApiKey"].Text == '' or itm["Region"].Text == '':
-        show_warning_message('Please go to Configuration to enter the API Key.')
+        show_warning_message('前往配置栏填写区域和API密钥.')
         return
     
     update_status("播放中 ...")
@@ -1321,15 +1545,13 @@ def on_play_button_clicked(ev):
     global subtitle, ssml, stream 
     service_region = itm["Region"].Text
     speech_key = itm["ApiKey"].Text
-    style = itm["StyleCombo"].CurrentText
+    style = get_original_style(itm["StyleCombo"].CurrentText)
     style_degree = itm["StyleDegreeSpinBox"].Value
     subtitle = itm["SubtitleTxt"].PlainText
     rate = itm["RateSpinBox"].Value
     pitch = itm["PitchSpinBox"].Value
-    multilingual = itm["MutilCombo"].CurrentText
+    multilingual = get_original_lang(itm["MultilingualCombo"].CurrentText)
     voice_name = itm["NameCombo"].CurrentText
-    print(voice_name)
-    print(multilingual)
     output_format = itm["OutputFormatCombo"].CurrentText
     if output_format in audio_formats:
         audio_format = audio_formats[output_format]
@@ -1369,19 +1591,20 @@ def on_load_button_clicked(ev):
     print(f"stream:{stream}")
     if stream and current_context==subtitle:
         stream.save_to_wav_file(filename)
+        time.sleep(1)
         add_to_media_pool(filename)
-        update_status("Load successful")
+        update_status("加载成功")
         stream =None
     elif not stream and current_context!=subtitle:
-        update_status("Generate ...")
+        update_status("合成中 ...")
         service_region = itm["Region"].Text
         speech_key = itm["ApiKey"].Text
-        style = itm["StyleCombo"].CurrentText
+        style = get_original_style(itm["StyleCombo"].CurrentText)
         style_degree = itm["StyleDegreeSpinBox"].Value
         subtitle = itm["SubtitleTxt"].PlainText
         rate = itm["RateSpinBox"].Value
         pitch = itm["PitchSpinBox"].Value
-        multilingual = itm["MutilCombo"].CurrentText
+        multilingual = get_original_lang(itm["MultilingualCombo"].CurrentText)
         voice_name = itm["NameCombo"].CurrentText
         output_format = itm["OutputFormatCombo"].CurrentText
         if output_format in audio_formats:
@@ -1395,6 +1618,7 @@ def on_load_button_clicked(ev):
         result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
         
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            time.sleep(1)
             add_to_media_pool(filename)
             update_status("加载成功")
         elif result.reason == speechsdk.ResultReason.Canceled:
@@ -1404,10 +1628,18 @@ def on_load_button_clicked(ev):
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
                 print("Error details: {}".format(cancellation_details.error_details))
     else:
-        update_status(f"媒体池中已存在")
+        update_status(f"媒体池已存在该片段")
         #current_context = itm["SubtitleTxt"].PlainText
 
 win.On.LoadButton.Clicked = on_load_button_clicked
+
+def on_break_button_clicked(ev):
+    breaktime =  itm["BreakSpinBox"].Value
+    # 插入<break>标志
+    itm["SubtitleTxt"].InsertPlainText(f'<break time="{breaktime}ms" />')
+
+win.On.BreakButton.Clicked = on_break_button_clicked
+
 
 
 def on_reset_button_clicked(ev):
@@ -1418,6 +1650,7 @@ def on_reset_button_clicked(ev):
     itm["NameTypeCombo"].CurrentIndex = default_settings["TYPE"]
     itm["NameCombo"].CurrentIndex = default_settings["NAME"]
     itm["RateSpinBox"].Value = default_settings["RATE"]
+    itm["BreakSpinBox"].Value = default_settings["BREAKTIME"]
     itm["PitchSpinBox"].Value = default_settings["PITCH"]
     itm["StyleCombo"].CurrentIndex = default_settings["STYLE"]
     itm["StyleDegreeSpinBox"].Value = default_settings["STYLEDEGREE"]
