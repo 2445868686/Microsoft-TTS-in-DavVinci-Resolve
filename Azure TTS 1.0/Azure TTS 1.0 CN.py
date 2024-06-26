@@ -194,7 +194,7 @@ dispatcher = bmd.UIDispatcher(ui)
 win = dispatcher.AddWindow(
     {
         "ID": 'MyWin',
-        "WindowTitle": 'TTS 1.0',
+        "WindowTitle": 'TTS 1.0 赞助版',
         "Geometry": [700, 300, 425, 600],
         "Spacing": 10,
     },
@@ -382,12 +382,12 @@ itm = win.GetItems()
 itm["GetSubButton"].Text = "从时间线获取字幕"
 itm["BreakButton"].Text = "停顿"
 itm["LanguageLabel"].Text = "语言"
-itm["MultilingualLabel"].Text = "多语言"
+itm["MultilingualLabel"].Text = "语言技能"
 itm["NameTypeLabel"].Text = "类型"
 itm["NameLabel"].Text = "名称"
 itm["StyleLabel"].Text = "风格"
 itm["StyleDegreeLabel"].Text = "风格强度"
-itm["RateLabel"].Text = "速度"
+itm["RateLabel"].Text = "语速"
 itm["PitchLabel"].Text = "音高"
 itm["OutputFormatLabel"].Text = "输出格式"
 itm["PlayButton"].Text = "播放预览"
@@ -1685,7 +1685,7 @@ def close_and_save(settings_file):
     save_settings(settings, settings_file)
 
 def on_open_link_button_clicked(ev):
-    webbrowser.open("https://www.paypal.me/heiba2wk")
+    webbrowser.open("https://mp.weixin.qq.com/s?__biz=MzUzMTk2MDU5Nw==&mid=2247484556&idx=1&sn=d4969f2d582c134d071aac4c23eb1df8&chksm=fabbc2f6cdcc4be085216b63b68cd772833e47bcdca90e1630e06a1957839729d5830e7321f8#rd")
 win.On.OpenLinkButton.Clicked = on_open_link_button_clicked
 
 def on_close(ev):
