@@ -242,8 +242,8 @@ win = dispatcher.AddWindow(
                                     [
                                         ui.Label({"ID": 'NameLabel', "Text": 'Name', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'NameCombo', "Text": '', "Weight": 0.8}),
-                                        ui.Label({"ID": 'MultilingualLabel', "Text": 'Multilingual', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
-                                        ui.ComboBox({"ID": 'MultilingualCombo', "Text": '', "Weight": 0.2}),      
+                                        ui.Label({"ID": 'MutilLabel', "Text": 'Multilingual', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.ComboBox({"ID": 'MutilCombo', "Text": '', "Weight": 0.2}),      
                                   
                                     ]
                                 ),
@@ -1091,55 +1091,26 @@ styles = {
     "zh-CN-YunyeNeural": ["angry", "calm", "cheerful", "disgruntled", "embarrassed", "fearful", "sad", "serious"],
     "zh-CN-YunzeNeural": ["angry", "calm", "cheerful", "depressed", "disgruntled", "documentary-narration", "fearful", "sad", "serious"]
 }
+# 定义语言组
+lang1 = {"af-ZA", "sq-AL", "am-ET", "ar-EG", "ar-SA", "hy-AM", "az-AZ", "eu-ES", "bn-IN", "bs-BA", "bg-BG", "my-MM", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "hr-HR", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "et-EE", "fil-PH", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "gl-ES", "ka-GE", "de-AT", "de-DE", "de-CH", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "ga-IE", "it-IT", "ja-JP", "jv-ID", "kn-IN", "kk-KZ", "km-KH", "ko-KR", "lo-LA", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "ml-IN", "mt-MT", "mn-MN", "ne-NP", "nb-NO", "ps-AF", "fa-IR", "pl-PL", "pt-BR", "pt-PT", "ro-RO", "ru-RU", "sr-RS", "si-LK", "sk-SK", "sl-SI", "so-SO", "es-MX", "es-ES", "su-ID", "sw-KE", "sv-SE", "ta-IN", "te-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "uz-UZ", "vi-VN", "cy-GB", "zu-ZA"}
 
+lang2 = {"af-ZA", "ar-EG", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG", "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US", "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN", "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN", "mi-NZ", "ne-NP", "nb-NO", "fa-IR", "pl-PL", "pt-BR", "ro-RO", "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE", "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN", "cy-GB"}
 
-# 定义多语言和人名组
+lang3 = {"ar-EG", "ar-SA", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "de-AT", "de-DE", "de-CH", "hi-IN", "hu-HU", "id-ID", "it-IT", "ja-JP", "ko-KR", "nb-NO", "pl-PL", "pt-BR", "pt-PT", "ru-RU", "es-MX", "es-ES", "sv-SE", "th-TH", "tr-TR"}
+
+# 定义人名组
+name1 = ["en-US-AndrewMultilingualNeural (Male)", "en-US-AvaMultilingualNeural (Female)", "en-US-BrianMultilingualNeural (Male)", "en-US-EmmaMultilingualNeural (Female)", "en-GB-AdaMultilingualNeural (Female)", "en-GB-OllieMultilingualNeural (Male)", "de-DE-SeraphinaMultilingualNeural (Female)", "de-DE-FlorianMultilingualNeural (Male)", "es-ES-IsidoraMultilingualNeural (Female)", "es-ES-ArabellaMultilingualNeural (Female)", "fr-FR-VivienneMultilingualNeural (Female)", "fr-FR-RemyMultilingualNeural (Male)", "it-IT-IsabellaMultilingualNeural (Female)", "it-IT-MarcelloMultilingualNeural (Male)", "it-IT-AlessioMultilingualNeural (Male)", "ja-JP-MasaruMultilingualNeural (Male)", "pt-BR-ThalitaMultilingualNeural (Female)", "zh-CN-XiaoxiaoMultilingualNeural (Female)", "zh-CN-XiaochenMultilingualNeural (Female)", "zh-CN-YunyiMultilingualNeural (Male)"]
+
+name2 = ["en-US-AlloyMultilingualNeural (Male)", "en-US-EchoMultilingualNeural (Male)", "en-US-FableMultilingualNeural (Neutral)", "en-US-OnyxMultilingualNeural (Male)", "en-US-NovaMultilingualNeural (Female)", "en-US-ShimmerMultilingualNeural (Female)", "en-US-AlloyMultilingualNeuralHD (Male)", "en-US-EchoMultilingualNeuralHD (Male)", "en-US-FableMultilingualNeuralHD (Neutral)", "en-US-OnyxMultilingualNeuralHD (Male)", "en-US-NovaMultilingualNeuralHD (Female)", "en-US-ShimmerMultilingualNeuralHD (Female)"]
+
+name3 = ["en-US-JennyMultilingualNeural (Female)", "en-US-RyanMultilingualNeural (Male)"]
+
+# 创建关系字典
 Multilinguals = {
-    "Multilingual1": {
-        "names": [
-            "en-US-AndrewMultilingualNeural (Male)", "en-US-AvaMultilingualNeural (Female)", "en-US-BrianMultilingualNeural (Male)", 
-            "en-US-EmmaMultilingualNeural (Female)", "en-GB-AdaMultilingualNeural (Female)", "en-GB-OllieMultilingualNeural (Male)", 
-            "de-DE-SeraphinaMultilingualNeural (Female)", "de-DE-FlorianMultilingualNeural (Male)", "es-ES-IsidoraMultilingualNeural (Female)", 
-            "es-ES-ArabellaMultilingualNeural (Female)", "fr-FR-VivienneMultilingualNeural (Female)", "fr-FR-RemyMultilingualNeural (Male)", 
-            "it-IT-IsabellaMultilingualNeural (Female)", "it-IT-MarcelloMultilingualNeural (Male)", "it-IT-AlessioMultilingualNeural (Male)", 
-            "ja-JP-MasaruMultilingualNeural (Male)", "pt-BR-ThalitaMultilingualNeural (Female)", "zh-CN-XiaoxiaoMultilingualNeural (Female)", 
-            "zh-CN-XiaochenMultilingualNeural (Female)", "zh-CN-YunyiMultilingualNeural (Male)"
-        ],
-        "languages": {
-            "af-ZA", "sq-AL", "am-ET", "ar-EG", "ar-SA", "hy-AM", "az-AZ", "eu-ES", "bn-IN", "bs-BA", "bg-BG", "my-MM", "ca-ES", "zh-HK", 
-            "zh-CN", "zh-TW", "hr-HR", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", "en-IE", "en-GB", "en-US", 
-            "et-EE", "fil-PH", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "gl-ES", "ka-GE", "de-AT", "de-DE", "de-CH", "el-GR", "he-IL", 
-            "hi-IN", "hu-HU", "is-IS", "id-ID", "ga-IE", "it-IT", "ja-JP", "jv-ID", "kn-IN", "kk-KZ", "km-KH", "ko-KR", "lo-LA", "lv-LV", 
-            "lt-LT", "mk-MK", "ms-MY", "ml-IN", "mt-MT", "mn-MN", "ne-NP", "nb-NO", "ps-AF", "fa-IR", "pl-PL", "pt-BR", "pt-PT", "ro-RO", 
-            "ru-RU", "sr-RS", "si-LK", "sk-SK", "sl-SI", "so-SO", "es-MX", "es-ES", "su-ID", "sw-KE", "sv-SE", "ta-IN", "te-IN", "th-TH", 
-            "tr-TR", "uk-UA", "ur-PK", "uz-UZ", "vi-VN", "cy-GB", "zu-ZA"
-        }
-    },
-    "Multilingual2": {
-        "names": [
-            "en-US-AlloyMultilingualNeural (Male)", "en-US-EchoMultilingualNeural (Male)", "en-US-FableMultilingualNeural (Neutral)", 
-            "en-US-OnyxMultilingualNeural (Male)", "en-US-NovaMultilingualNeural (Female)", "en-US-ShimmerMultilingualNeural (Female)", 
-            "en-US-AlloyMultilingualNeuralHD (Male)", "en-US-EchoMultilingualNeuralHD (Male)", "en-US-FableMultilingualNeuralHD (Neutral)", 
-            "en-US-OnyxMultilingualNeuralHD (Male)", "en-US-NovaMultilingualNeuralHD (Female)", "en-US-ShimmerMultilingualNeuralHD (Female)"
-        ],
-        "languages": {
-            "af-ZA", "ar-EG", "hy-AM", "az-AZ", "be-BY", "bs-BA", "bg-BG", "ca-ES", "zh-CN", "hr-HR", "cs-CZ", "da-DK", "nl-NL", "en-US", 
-            "et-EE", "fi-FI", "fr-FR", "gl-ES", "de-DE", "el-GR", "he-IL", "hi-IN", "hu-HU", "is-IS", "id-ID", "it-IT", "ja-JP", "kn-IN", 
-            "kk-KZ", "ko-KR", "lv-LV", "lt-LT", "mk-MK", "ms-MY", "mr-IN", "mi-NZ", "ne-NP", "nb-NO", "fa-IR", "pl-PL", "pt-BR", "ro-RO", 
-            "ru-RU", "sr-RS", "sk-SK", "sl-SI", "es-ES", "sw-KE", "sv-SE", "fil-PH", "ta-IN", "th-TH", "tr-TR", "uk-UA", "ur-PK", "vi-VN", 
-            "cy-GB"
-        }
-    },
-    "Multilingual3": {
-        "names": ["en-US-JennyMultilingualNeural (Female)", "en-US-RyanMultilingualNeural (Male)"],
-        "languages": {
-            "ar-EG", "ar-SA", "ca-ES", "zh-HK", "zh-CN", "zh-TW", "cs-CZ", "da-DK", "nl-BE", "nl-NL", "en-AU", "en-CA", "en-HK", "en-IN", 
-            "en-IE", "en-GB", "en-US", "fi-FI", "fr-BE", "fr-CA", "fr-FR", "fr-CH", "de-AT", "de-DE", "de-CH", "hi-IN", "hu-HU", "id-ID", 
-            "it-IT", "ja-JP", "ko-KR", "nb-NO", "pl-PL", "pt-BR", "pt-PT", "ru-RU", "es-MX", "es-ES", "sv-SE", "th-TH", "tr-TR"
-        }
-    }
+    "Multilingual1": {"names": name1, "languages": lang1},
+    "Multilingual2": {"names": name2, "languages": lang2},
+    "Multilingual3": {"names": name3, "languages": lang3}
 }
-
 Language = [voices[locale]['language'] for locale in voices.keys()]
 for language in Language:
     itm["LanguageCombo"].AddItem(language)
@@ -1169,21 +1140,23 @@ def on_name_combo_current_index_changed(ev):
     itm["StyleCombo"].AddItem('Default')
     itm["StyleCombo"].Enabled = False
     selected_voice = itm["NameCombo"].CurrentText.split(' (')[0]
+    
     if selected_voice in styles:
         itm["StyleCombo"].Enabled = True
         for style in styles[selected_voice]:
             itm["StyleCombo"].AddItem(style)
-    itm["MultilingualCombo"].Clear()
-    itm["MultilingualCombo"].AddItem('Default')
-    itm["MultilingualCombo"].Enabled = False
+
+    itm["MutilCombo"].Clear()
+    itm["MutilCombo"].AddItem('Default')
+    itm["MutilCombo"].Enabled = False
     if "Multilingual" in selected_voice:
-        itm["MultilingualCombo"].Enabled = True
+        itm["MutilCombo"].Enabled = True
         for group_name, data in Multilinguals.items():
             cleaned_names = [n.split(' (')[0] for n in data["names"]]
             if selected_voice in cleaned_names:
                 print(group_name)
                 for language in data["languages"]:
-                    itm["MultilingualCombo"].AddItem(language)
+                    itm["MutilCombo"].AddItem(language)
                 break 
       
    
@@ -1246,7 +1219,7 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
 
     voice = ET.SubElement(speak, 'voice', name=voice_name)
     
-    if multilingual!= "Default":
+    if multilingual != "Default":
         lang_tag = ET.SubElement(voice, 'lang', attrib={"xml:lang": multilingual})
         parent_tag = lang_tag
     else:
@@ -1289,6 +1262,7 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
                     process_text_with_breaks(prosody, line)
                 else:
                     process_text_with_breaks(paragraph, line)
+
 
     if multilingual:
         parent_tag.tail = "\n"
@@ -1392,7 +1366,7 @@ def on_play_button_clicked(ev):
     subtitle = itm["SubtitleTxt"].PlainText
     rate = itm["RateSpinBox"].Value
     pitch = itm["PitchSpinBox"].Value
-    multilingual = itm["MultilingualCombo"].CurrentText
+    multilingual = itm["MutilCombo"].CurrentText
     voice_name = itm["NameCombo"].CurrentText
     output_format = itm["OutputFormatCombo"].CurrentText
     if output_format in audio_formats:
@@ -1410,7 +1384,6 @@ def on_play_button_clicked(ev):
         itm["PlayButton"].Text = "Play"
         update_status("")
     elif result.reason == speechsdk.ResultReason.Canceled:
-        itm["PlayButton"].Text = "Play"
         cancellation_details = result.cancellation_details
         update_status(f"Failed to generate")
         print("Speech synthesis canceled: {}".format(cancellation_details.reason))
@@ -1446,7 +1419,7 @@ def on_load_button_clicked(ev):
         subtitle = itm["SubtitleTxt"].PlainText
         rate = itm["RateSpinBox"].Value
         pitch = itm["PitchSpinBox"].Value
-        multilingual = itm["MultilingualCombo"].CurrentText
+        multilingual = itm["MutilCombo"].CurrentText
         voice_name = itm["NameCombo"].CurrentText
         output_format = itm["OutputFormatCombo"].CurrentText
         if output_format in audio_formats:
