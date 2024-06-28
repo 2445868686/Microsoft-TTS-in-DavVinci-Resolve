@@ -84,6 +84,7 @@ default_settings = {
     "NAME": 0,
     "RATE": 1.0,
     "PITCH": 1.0,
+    "VOLUME": 1.0,
     "STYLE": 0,
     "BREAKTIME":50,
     "STYLEDEGREE": 1.0,
@@ -286,6 +287,15 @@ win = dispatcher.AddWindow(
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
+                                        
+                                        ui.Label({"ID": 'VolumeLabel', "Text": 'Volume', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Slider({"ID": 'VolumeSlider', "Value": 100, "Minimum": 0, "Maximum": 150,  "Orientation": "Horizontal", "Weight": 0.5}),
+                                        ui.DoubleSpinBox({"ID": 'VolumeSpinBox', "Value": 1.0, "Minimum": 0, "Maximum": 1.5, "SingleStep": 0.01, "Weight": 0.3}),
+                                    ]
+                                ),
+                                ui.HGroup(
+                                    {"Weight": 0.1},
+                                    [
                                         ui.Label({"ID": 'OutputFormatLabel', "Text": 'Format', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'OutputFormatCombo', "Text": 'Output_Format', "Weight": 0.8}),
                                     ]
@@ -402,11 +412,13 @@ itm["MyTabs"].AddTab("Azure TTS")
 itm["MyTabs"].AddTab("Configuration")
 
 def on_style_degree_slider_value_changed(ev):
+    stream = None
     value = ev['Value'] / 100.0  
     itm["StyleDegreeSpinBox"].Value = value
 win.On.StyleDegreeSlider.ValueChanged = on_style_degree_slider_value_changed
 
 def on_style_degree_spinbox_value_changed(ev):
+    stream = None
     value = int(ev['Value'] * 100)  
     itm["StyleDegreeSlider"].Value = value
 win.On.StyleDegreeSpinBox.ValueChanged = on_style_degree_spinbox_value_changed
@@ -431,6 +443,16 @@ def on_pitch_spinbox_value_changed(ev):
     value = int(ev['Value'] * 100)  
     itm["PitchSlider"].Value = value
 win.On.PitchSpinBox.ValueChanged = on_pitch_spinbox_value_changed
+
+def on_volume_slider_value_changed(ev):
+    value = ev['Value'] / 100.0  
+    itm["VolumeSpinBox"].Value = value
+win.On.VolumeSlider.ValueChanged = on_volume_slider_value_changed
+
+def on_volume_spinbox_value_changed(ev):
+    value = int(ev['Value'] * 100)  
+    itm["VolumeSlider"].Value = value
+win.On.VolumeSpinBox.ValueChanged = on_volume_spinbox_value_changed
 
 def on_my_tabs_current_changed(ev):
     itm["MyStack"].CurrentIndex = ev["Index"]
@@ -457,6 +479,8 @@ ssml = ''
 voice_name = ""
 style = None
 rate = None
+pitch = None
+volume = None
 style_degree = None
 stream = None
 
@@ -1184,6 +1208,7 @@ if saved_settings:
     itm["NameCombo"].CurrentIndex = saved_settings.get("NAME", default_settings["NAME"])
     itm["RateSpinBox"].Value = saved_settings.get("RATE", default_settings["RATE"])
     itm["PitchSpinBox"].Value = saved_settings.get("PITCH", default_settings["PITCH"])
+    itm["VolumeSpinBox"].Value = saved_settings.get("VOLUME", default_settings["VOLUME"])
     itm["StyleCombo"].CurrentIndex = saved_settings.get("STYLE", default_settings["STYLE"])
     itm["StyleDegreeSpinBox"].Value = saved_settings.get("STYLEDEGREE", default_settings["STYLEDEGREE"])
     itm["OutputFormatCombo"].CurrentIndex = saved_settings.get("OUTPUT_FORMATS", default_settings["OUTPUT_FORMATS"])
@@ -1208,7 +1233,7 @@ def on_getsub_button_clicked(ev):
 win.On.GetSubButton.Clicked = on_getsub_button_clicked
 
     
-def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, styledegree=None, multilingual='Default'):
+def create_ssml(lang, voice_name, text, rate=None, pitch=None,volume=None, style=None, styledegree=None, multilingual='Default'):
     speak = ET.Element('speak', xmlns="http://www.w3.org/2001/10/synthesis",
                        attrib={
                            "xmlns:mstts": "http://www.w3.org/2001/mstts",
@@ -1242,6 +1267,9 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
                 if pitch is not None and pitch != 1.0:
                     prosody_pitch = f"+{(pitch-1)*100:.2f}%" if pitch > 1 else f"-{(1-pitch)*100:.2f}%"
                     prosody_attrs['pitch'] = prosody_pitch
+                if volume is not None and volume != 1.0:
+                    prosody_volume = f"+{(volume-1)*100:.2f}%" if volume > 1 else f"-{(1-volume)*100:.2f}%"
+                    prosody_attrs['volume'] = prosody_volume
 
                 if prosody_attrs:
                     prosody = ET.SubElement(express_as, 'prosody', attrib=prosody_attrs)
@@ -1256,6 +1284,9 @@ def create_ssml(lang, voice_name, text, rate=None, pitch=None, style=None, style
                 if pitch is not None and pitch != 1.0:
                     prosody_pitch = f"+{(pitch-1)*100:.2f}%" if pitch > 1 else f"-{(1-pitch)*100:.2f}%"
                     prosody_attrs['pitch'] = prosody_pitch
+                if volume is not None and volume != 1.0:
+                    prosody_volume = f"+{(volume-1)*100:.2f}%" if volume > 1 else f"-{(1-volume)*100:.2f}%"
+                    prosody_attrs['volume'] = prosody_volume
 
                 if prosody_attrs:
                     prosody = ET.SubElement(paragraph, 'prosody', attrib=prosody_attrs)
@@ -1335,11 +1366,11 @@ def show_warning_message(text):
 def update_status(message):
     itm["StatusLabel"].Text = message
 
-def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config):
+def synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate,volume, style, style_degree, multilingual,pitch,audio_format, audio_output_config):
     speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
     speech_config.set_speech_synthesis_output_format(audio_format)
     
-    ssml = create_ssml(lang=lang, voice_name=voice_name, text=subtitle, rate=rate, style=style, styledegree=style_degree,multilingual= multilingual,pitch=pitch)
+    ssml = create_ssml(lang=lang, voice_name=voice_name, text=subtitle, rate=rate,volume=volume, style=style, styledegree=style_degree,multilingual= multilingual,pitch=pitch)
     print(ssml)
     
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_output_config)
@@ -1366,9 +1397,11 @@ def on_play_button_clicked(ev):
     subtitle = itm["SubtitleTxt"].PlainText
     rate = itm["RateSpinBox"].Value
     pitch = itm["PitchSpinBox"].Value
+    volume = itm["VolumeSpinBox"].Value
     multilingual = itm["MutilCombo"].CurrentText
     voice_name = itm["NameCombo"].CurrentText
     output_format = itm["OutputFormatCombo"].CurrentText
+    print(volume)
     if output_format in audio_formats:
         audio_format = audio_formats[output_format]
     else:
@@ -1377,7 +1410,7 @@ def on_play_button_clicked(ev):
 
     audio_output_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
     
-    result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
+    result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, volume,style, style_degree, multilingual,pitch,audio_format, audio_output_config)
     stream = speechsdk.AudioDataStream(result)
 
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
@@ -1419,6 +1452,7 @@ def on_load_button_clicked(ev):
         subtitle = itm["SubtitleTxt"].PlainText
         rate = itm["RateSpinBox"].Value
         pitch = itm["PitchSpinBox"].Value
+        volume = itm["VolumeSpinBox"].Value
         multilingual = itm["MutilCombo"].CurrentText
         voice_name = itm["NameCombo"].CurrentText
         output_format = itm["OutputFormatCombo"].CurrentText
@@ -1430,7 +1464,7 @@ def on_load_button_clicked(ev):
 
         audio_output_config = speechsdk.audio.AudioOutputConfig(filename=filename)
         
-        result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
+        result = synthesize_speech(service_region, speech_key, lang, voice_name, subtitle, rate,volume, style, style_degree, multilingual,pitch,audio_format, audio_output_config)
         
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
             time.sleep(1)
@@ -1467,6 +1501,7 @@ def on_reset_button_clicked(ev):
     itm["RateSpinBox"].Value = default_settings["RATE"]
     itm["BreakSpinBox"].Value = default_settings["BREAKTIME"]
     itm["PitchSpinBox"].Value = default_settings["PITCH"]
+    itm["VolumeSpinBox"].Value = default_settings["VOLUME"]
     itm["StyleCombo"].CurrentIndex = default_settings["STYLE"]
     itm["StyleDegreeSpinBox"].Value = default_settings["STYLEDEGREE"]
     itm["OutputFormatCombo"].CurrentIndex = default_settings["OUTPUT_FORMATS"]
@@ -1492,6 +1527,7 @@ def close_and_save(settings_file):
         "NAME": itm["NameCombo"].CurrentIndex,
         "RATE": itm["RateSpinBox"].Value,
         "PITCH": itm["PitchSpinBox"].Value,
+        "VOLUME": itm["VolumeSpinBox"].Value,
         "STYLE": itm["StyleCombo"].CurrentIndex,
         "STYLEDEGREE": itm["StyleDegreeSpinBox"].Value,
         "OUTPUT_FORMATS": itm["OutputFormatCombo"].CurrentIndex,
